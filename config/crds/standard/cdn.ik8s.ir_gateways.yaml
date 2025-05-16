@@ -1,0 +1,73 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    gateway.cdn.ik8s.ir/channel: standard
+  creationTimestamp: null
+  name: cdngateways.cdn.ik8s.ir
+spec:
+  group: cdn.ik8s.ir
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                upstreams:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      hostHeader:
+                        type: string
+                      servers:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            protocol:
+                              type: string
+                              enum: [http, https]
+                            address:
+                              type: string
+                            port:
+                              type: integer
+                              minimun: 1
+                              maximum: 65535
+                            weight:
+                              type: integer
+                              default: 1
+                              minimum: 1
+                              maximum: 100
+                            tlsVerify:
+                              type: boolean
+                              default: false
+      additionalPrinterColumns:
+        - name: Upstreams
+          type: string
+          description: upstreams names
+          jsonPath: .spec.upstreams[*].name
+          priority: 0
+        - name: UpstreamServers
+          type: string
+          description: List of upstream servers
+          jsonPath: .spec.upstreams[*].servers[*]
+          priority: 0
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp
+  scope: Namespaced
+  names:
+    plural: cdngateways
+    singular: cdngateway
+    kind: CdnGateway
+    shortNames:
+      - cdngw
+      - cdng

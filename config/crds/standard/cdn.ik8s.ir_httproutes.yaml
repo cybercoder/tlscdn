@@ -1,0 +1,70 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    cdnhttproute.cdn.ik8s.ir/channel: standard
+  creationTimestamp: null
+  name: cdnhttproutes.cdn.ik8s.ir
+spec:
+  group: cdn.ik8s.ir
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                gateway:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                upstreamName:
+                  type: string
+                path:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                      enum: [exact, prefix]
+                      default: "prefix"
+                    path:
+                      type: string
+                      default: "/"
+      selectableFields:
+        - jsonPath: .spec.gateway.name
+      additionalPrinterColumns:
+        - name: CDNGateway
+          type: string
+          description: CDN agteway
+          jsonPath: .spec.gateway.name
+          priority: 0
+        - name: UpstreamName
+          type: string
+          description: Current Upstream name
+          jsonPath: .spec.upstreamName
+          priority: 0
+        - name: PathType
+          type: string
+          description: path type
+          jsonPath: .spec.path.type
+          priority: 0
+        - name: Path
+          type: string
+          description: path
+          jsonPath: .spec.path.path
+          priority: 0
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp
+  scope: Namespaced
+  names:
+    plural: cdnhttproutes
+    singular: cdnhttproute
+    kind: CdnHTTPRoute
+    shortNames:
+      - cdnhr
