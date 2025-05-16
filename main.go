@@ -12,11 +12,17 @@ func main() {
 		AddFunc: events.OnAddGateway,
 	})
 
+	httpRouteInformer := k8s.CreateHTTPRouteInformer()
+	httpRouteInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc: events.OnAddHTTPRoute,
+	})
+
 	stopCh := make(chan struct{})
 
 	defer close(stopCh)
 
 	go gatewayInformer.Run(stopCh)
+	go httpRouteInformer.Run(stopCh)
 
 	select {}
 }
