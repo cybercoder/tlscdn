@@ -9,18 +9,25 @@ import (
 )
 
 var gatewayInformer cache.SharedIndexInformer
+var upstreamInformer cache.SharedIndexInformer
 var httprouteInformer cache.SharedIndexInformer
 
 var gatewayGVR = schema.GroupVersionResource{
-	Group:    "gateway.cdn.ik8s.ir",
+	Group:    "cdn.ik8s.ir",
 	Version:  "v1alpha1",
-	Resource: "gateways",
+	Resource: "cdngateways",
 }
 
 var httprouteGVR = schema.GroupVersionResource{
-	Group:    "gateway.cdn.ik8s.ir",
-	Version:  "v1",
-	Resource: "httproutes",
+	Group:    "cdn.ik8s.ir",
+	Version:  "v1alpha1",
+	Resource: "cdnhttproutes",
+}
+
+var upstreamGVR = schema.GroupVersionResource{
+	Group:    "cdn.ik8s.ir",
+	Version:  "v1alpha1",
+	Resource: "upstreams",
 }
 
 func CreateGatewayInformer() cache.SharedIndexInformer {
