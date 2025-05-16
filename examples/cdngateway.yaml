@@ -1,0 +1,13 @@
+apiVersion: cdn.ik8s.ir/v1alpha1
+kind: CdnGateway
+metadata:
+  name: example
+spec:
+  upstreams:
+    - name: default
+      hostHeader: example.com
+      servers:
+        - protocol: "https"
+          port: 443
+          address: "example.com"
+          # tlsVerify omitted - will default to false

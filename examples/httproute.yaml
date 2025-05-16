@@ -1,0 +1,11 @@
+apiVersion: cdn.ik8s.ir/v1alpha1
+kind: CdnHTTPRoute
+metadata:
+  name: example
+spec:
+  gateway:
+    name: example
+  upstreamName: default
+  path:
+    type: prefix
+    path: "/"
