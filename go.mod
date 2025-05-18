@@ -1,4 +1,4 @@
-module github.com/cybercoder/tlscdn
+module github.com/cybercoder/tlscdn-controller
 
 go 1.24.3
 

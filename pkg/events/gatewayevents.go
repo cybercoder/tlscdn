@@ -7,8 +7,8 @@ import (
 	"os"
 	"strings"
 
-	v1alpha1 "github.com/cybercoder/tlscdn/pkg/apis/v1alpha1/types"
-	"github.com/cybercoder/tlscdn/pkg/redis"
+	v1alpha1 "github.com/cybercoder/tlscdn-controller/pkg/apis/v1alpha1/types"
+	"github.com/cybercoder/tlscdn-controller/pkg/redis"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 )

@@ -1,6 +1,6 @@
 # TLSCDN - Kubernetes-Native CDN Controller for TLS Edge Routing
 
-TLSCDN is a Kubernetes controller that enables edge routing for http traffic in a Content Delivery Network (CDN) setup. It watches for CdnGateway and CdnHTTPRoute custom resources in your Kubernetes cluster and dynamically configures the underlying CDN infrastructure through a Redis database.
+TLSCDN controller is a Kubernetes controller that enables edge routing for http traffic in a Content Delivery Network (CDN) setup. It watches for CdnGateway and CdnHTTPRoute custom resources in your Kubernetes cluster and dynamically configures the underlying CDN infrastructure through a Redis database.
 
 ## Overview
 

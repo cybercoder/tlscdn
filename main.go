@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/cybercoder/tlscdn/pkg/events"
-	"github.com/cybercoder/tlscdn/pkg/k8s"
+	"github.com/cybercoder/tlscdn-controller/pkg/events"
+	"github.com/cybercoder/tlscdn-controller/pkg/k8s"
 	"k8s.io/client-go/tools/cache"
 )
 
