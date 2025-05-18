@@ -35,8 +35,8 @@ func OnAddGateway(obj interface{}) {
 	}
 	CDN_HOSTNAME := os.Getenv("CDN_HOSTNAME")
 	if CDN_HOSTNAME == "" {
-		CDN_HOSTNAME = "cdntls.ir"
+		CDN_HOSTNAME = "tlscdn.ir"
 	}
-	status := redisClient.Set(context.Background(), strings.Replace(string(gateway.GetUID()), "-", "", -1)+".cdntls.ir", jsonData, 0)
+	status := redisClient.Set(context.Background(), strings.Replace(string(gateway.GetUID()), "-", "", -1)+"."+CDN_HOSTNAME, jsonData, 0)
 	log.Printf("status %v", status)
 }
