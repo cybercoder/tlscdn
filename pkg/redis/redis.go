@@ -1,6 +1,10 @@
 package redis
 
-import "github.com/redis/go-redis/v9"
+import (
+	"os"
+
+	"github.com/redis/go-redis/v9"
+)
 
 var redisClient *redis.Client
 
@@ -9,8 +13,8 @@ func CreateClient() *redis.Client {
 		return redisClient
 	}
 	return redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "", // no password set
-		DB:       0,  // use default DB
+		Addr:     os.Getenv("REDIS_HOST") + ":" + os.Getenv("REDIS_PORT"),
+		Password: os.Getenv("REDIS_PASSWORD"),
+		DB:       0,
 	})
 }
