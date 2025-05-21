@@ -25,6 +25,10 @@ spec:
                       type: string
                 upstreamName:
                   type: string
+                lbMethod:
+                  type: string
+                  enum: [ip_hash]
+                  default: "ip_hash"
                 path:
                   type: object
                   properties:
@@ -35,6 +39,40 @@ spec:
                     path:
                       type: string
                       default: "/"
+                cache:
+                  type: object
+                  properties:
+                    level:
+                      type: string
+                      enum: [bypass, standard, ignore-query-string]
+                      default: "bypass"
+                    ignoreUpstreamCacheSettings:
+                      type: boolean
+                      default: false
+                    browserTTL:
+                      type: integer
+                      default: 3600
+                    edgeTTL:
+                      type: integer
+                      default: 3600
+                    nonSuccessTTL:
+                      type: integer
+                      default: 0
+                    staleTTL:
+                      type: integer
+                      default: 0
+                    immutable:
+                      type: boolean
+                      default: false
+            status:
+              description: |-
+                Most recently observed status of the cdnhttproute. This data may not be up
+                to date. Populated by the system. Read-only.
+              properties:
+                redisKey:
+                  description: The stored redis key
+                  type: string
+              type: object
       selectableFields:
         - jsonPath: .spec.gateway.name
       additionalPrinterColumns:
@@ -61,6 +99,8 @@ spec:
         - name: Age
           type: date
           jsonPath: .metadata.creationTimestamp
+      subresources:
+        status: {}
   scope: Namespaced
   names:
     plural: cdnhttproutes

@@ -3,6 +3,7 @@ module github.com/cybercoder/tlscdn-controller
 go 1.24.3
 
 require (
+	github.com/joho/godotenv v1.5.1
 	github.com/redis/go-redis/v9 v9.8.0
 	k8s.io/apimachinery v0.33.0
 	k8s.io/client-go v0.33.0

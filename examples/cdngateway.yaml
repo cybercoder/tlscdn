@@ -7,7 +7,76 @@ spec:
     - name: default
       hostHeader: example.com
       servers:
+        - protocol: "http"
+          port: 80
+          address: "23.192.228.80"
+        - protocol: "http"
+          port: 80
+          address: "23.192.228.84"
+        - protocol: "http"
+          port: 80
+          address: "96.7.128.198"
         - protocol: "https"
           port: 443
-          address: "example.com"
+          address: "23.215.0.136"
+        - protocol: "http"
+          port: 80
+          address: "23.215.0.138"
+        - protocol: "http"
+          port: 80
+          address: "96.7.128.175"
+---
+apiVersion: cdn.ik8s.ir/v1alpha1
+kind: CdnGateway
+metadata:
+  name: agenthub
+spec:
+  upstreams:
+    - name: default
+      hostHeader: agenthub.ir
+      servers:
+        - protocol: "https"
+          port: 443
+          address: "agenthub.ir"
           # tlsVerify omitted - will default to false
+---
+apiVersion: cdn.ik8s.ir/v1alpha1
+kind: CdnGateway
+metadata:
+  name: log
+spec:
+  upstreams:
+    - name: default
+      hostHeader: log.novin.cloud
+      servers:
+        - protocol: "https"
+          port: 443
+          address: "log.novin.cloud"
+          # tlsVerify omitted - will default to false
+---
+apiVersion: cdn.ik8s.ir/v1alpha1
+kind: CdnGateway
+metadata:
+  name: novinhost
+spec:
+  upstreams:
+    - name: default
+      hostHeader: novinhost.org
+      servers:
+        - protocol: "https"
+          port: 443
+          address: "www.novinhost.org"
+          # tlsVerify omitted - will default to false
+---
+apiVersion: cdn.ik8s.ir/v1alpha1
+kind: CdnGateway
+metadata:
+  name: forooz
+spec:
+  upstreams:
+    - name: default
+      hostHeader: foroozani.me
+      servers:
+        - protocol: "https"
+          port: 443
+          address: "foroozani.me"

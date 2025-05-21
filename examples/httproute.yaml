@@ -9,3 +9,59 @@ spec:
   path:
     type: prefix
     path: "/"
+  cache:
+    level: "standard"
+    ignoreUpstreamCacheSettings: false
+    browserTTL: 3600
+    edgeTTL: 3600
+    nonSuccessTTL: 3600
+    staleTTL: 3600
+    immutable: false
+---
+apiVersion: cdn.ik8s.ir/v1alpha1
+kind: CdnHTTPRoute
+metadata:
+  name: agenthub
+spec:
+  gateway:
+    name: agenthub
+  upstreamName: default
+  path:
+    type: prefix
+    path: "/"
+---
+apiVersion: cdn.ik8s.ir/v1alpha1
+kind: CdnHTTPRoute
+metadata:
+  name: log
+spec:
+  gateway:
+    name: log
+  upstreamName: default
+  path:
+    type: prefix
+    path: "/"
+---
+apiVersion: cdn.ik8s.ir/v1alpha1
+kind: CdnHTTPRoute
+metadata:
+  name: novinhost
+spec:
+  gateway:
+    name: novinhost
+  upstreamName: default
+  path:
+    type: prefix
+    path: "/"
+---
+apiVersion: cdn.ik8s.ir/v1alpha1
+kind: CdnHTTPRoute
+metadata:
+  name: forooz
+spec:
+  gateway:
+    name: forooz
+  upstreamName: default
+  path:
+    type: prefix
+    path: "/"
