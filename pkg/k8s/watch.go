@@ -1,8 +1,6 @@
 package k8s
 
 import (
-	"time"
-
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic/dynamicinformer"
 	"k8s.io/client-go/tools/cache"
@@ -34,7 +32,7 @@ func CreateGatewayInformer() cache.SharedIndexInformer {
 	if gatewayInformer != nil {
 		return gatewayInformer
 	}
-	informerFactory := dynamicinformer.NewFilteredDynamicSharedInformerFactory(CreateDynamicClient(), time.Second*30, "", nil)
+	informerFactory := dynamicinformer.NewFilteredDynamicSharedInformerFactory(CreateDynamicClient(), 0, "", nil)
 	gatewayInformer = informerFactory.ForResource(gatewayGVR).Informer()
 	return gatewayInformer
 }
@@ -43,7 +41,7 @@ func CreateHTTPRouteInformer() cache.SharedIndexInformer {
 	if httprouteInformer != nil {
 		return httprouteInformer
 	}
-	informerFactory := dynamicinformer.NewFilteredDynamicSharedInformerFactory(CreateDynamicClient(), time.Second*30, "", nil)
+	informerFactory := dynamicinformer.NewFilteredDynamicSharedInformerFactory(CreateDynamicClient(), 0, "", nil)
 	httprouteInformer = informerFactory.ForResource(httprouteGVR).Informer()
 	return httprouteInformer
 }

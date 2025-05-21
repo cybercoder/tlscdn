@@ -117,7 +117,6 @@ func OnUpdateHTTPRoute(prev interface{}, obj interface{}) {
 
 	var upstream v1alpha1Types.Upstream
 	for _, u := range gateway.Spec.Upstreams {
-		log.Printf("u %s U %s", u.Name, httproute.Spec.UpstreamName)
 		if u.Name == httproute.Spec.UpstreamName {
 			upstream = u
 			break
