@@ -3,7 +3,6 @@ package events
 import (
 	"context"
 	"encoding/json"
-	"log"
 	"os"
 	"strings"
 	"time"
@@ -11,6 +10,7 @@ import (
 	v1alpha1 "github.com/cybercoder/tlscdn-controller/pkg/apis/v1alpha1"
 	v1alpha1Types "github.com/cybercoder/tlscdn-controller/pkg/apis/v1alpha1/types"
 	"github.com/cybercoder/tlscdn-controller/pkg/k8s"
+	"github.com/cybercoder/tlscdn-controller/pkg/logger"
 	"github.com/cybercoder/tlscdn-controller/pkg/redis"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -21,7 +21,7 @@ func OnAddGateway(obj interface{}) {
 	u := obj.(*unstructured.Unstructured)
 	var gateway v1alpha1Types.Gateway
 	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(u.Object, &gateway); err != nil {
-		log.Printf("Error converting unstructured to gateway object: %v", err)
+		logger.Errorf("Error converting unstructured to gateway object: %v", err)
 		return
 	}
 
@@ -35,27 +35,28 @@ func OnAddGateway(obj interface{}) {
 
 	jsonData, err := json.Marshal(data)
 	if err != nil {
-		log.Printf("failed to marshal data: %v", err)
+		logger.Errorf("Failed to marshal data: %v", err)
 	}
 	CDN_HOSTNAME := os.Getenv("CDN_HOSTNAME")
 	if CDN_HOSTNAME == "" {
 		CDN_HOSTNAME = "tlscdn.ir"
 	}
-	status := redisClient.Set(context.Background(), strings.Replace(string(gateway.GetUID()), "-", "", -1)+"."+CDN_HOSTNAME, jsonData, 0)
-	log.Printf("status %v", status)
+	redisKey := strings.Replace(string(gateway.GetUID()), "-", "", -1) + "." + CDN_HOSTNAME
+	status := redisClient.Set(context.Background(), redisKey, jsonData, 0)
+	logger.Infof("Redis set status for gateway %s: %v", gateway.GetName(), status)
 
 }
 
 func OnUpdateGateway(prev interface{}, obj interface{}) {
 	gateway, err := convertUnstructToGateway(obj)
 	if err != nil {
-		log.Printf("Error converting unstructured to gateway object: %v", err)
+		logger.Errorf("Error converting unstructured to gateway object: %v", err)
 		return
 	}
 
 	oldgateway, err := convertUnstructToGateway(prev)
 	if err != nil {
-		log.Printf("Error converting unstructured previous to gateway object: %v", err)
+		logger.Errorf("Error converting unstructured previous to gateway object: %v", err)
 		return
 	}
 
@@ -67,11 +68,11 @@ func OnUpdateGateway(prev interface{}, obj interface{}) {
 	// find all httproutes associated to the gateway.
 	httpRoutes, err := findHttpRoutesByGatewayName(gateway.GetName(), gateway.GetNamespace())
 	if err != nil {
-		log.Printf("Error finding httproutes by gateway name: %v", err)
+		logger.Errorf("Error finding httproutes by gateway name: %v", err)
 		return
 	}
 	if len(httpRoutes.Items) == 0 {
-		log.Printf("No associated httproutes.")
+		logger.Info("No associated httproutes found for gateway")
 		return
 	}
 	k := k8s.CreateDynamicClient()
@@ -106,10 +107,10 @@ func OnUpdateGateway(prev interface{}, obj interface{}) {
 		uo.SetResourceVersion(httpRoute.GetResourceVersion())
 		_, err = k.Resource(v1alpha1.HTTPRouteGVR).Namespace(httpRoute.GetNamespace()).Update(context.Background(), uo, metav1.UpdateOptions{})
 		if err != nil {
-			log.Printf("Error on httproute apply changes: %v", err)
+			logger.Errorf("Error on httproute apply changes: %v", err)
 			return
 		}
-		log.Printf("updated")
+		logger.Infof("Updated httproute %s for gateway %s", httpRoute.GetName(), gateway.GetName())
 	}
 }
 
@@ -117,7 +118,7 @@ func convertUnstructToGateway(obj interface{}) (*v1alpha1Types.Gateway, error) {
 	u := obj.(*unstructured.Unstructured)
 	var gateway v1alpha1Types.Gateway
 	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(u.Object, &gateway); err != nil {
-		log.Printf("Error converting unstructured to gateway object: %v", err)
+		logger.Errorf("Error converting unstructured to gateway object: %v", err)
 		return nil, err
 	}
 	return &gateway, nil
@@ -129,7 +130,7 @@ func compareSpecs(spec1, spec2 v1alpha1Types.GatewaySpec) bool {
 	spec2JSON, err2 := json.Marshal(spec2)
 
 	if err1 != nil || err2 != nil {
-		log.Printf("Error marshaling specs: %v, %v", err1, err2)
+		logger.Errorf("Error marshaling specs: %v, %v", err1, err2)
 		return false // If we can't compare, assume they're different
 	}
 
@@ -146,7 +147,7 @@ func findHttpRoutesByGatewayName(name string, namespace string) (*v1alpha1Types.
 	}
 	var httpRouteList v1alpha1Types.HTTPRouteList
 	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(uglist.UnstructuredContent(), &httpRouteList); err != nil {
-		log.Printf("Error converting unstructured to HTTPRoute object: %v", err)
+		logger.Errorf("Error converting unstructured to HTTPRoute object: %v", err)
 		return nil, err
 	}
 	return &httpRouteList, nil
@@ -156,7 +157,7 @@ func OnDeleteGateway(obj interface{}) {
 	u := obj.(*unstructured.Unstructured)
 	var gateway v1alpha1Types.Gateway
 	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(u.Object, &gateway); err != nil {
-		log.Printf("Error converting unstructured to gateway object: %v", err)
+		logger.Errorf("Error converting unstructured to gateway object: %v", err)
 		return
 	}
 	k := k8s.CreateDynamicClient()
@@ -167,7 +168,7 @@ func OnDeleteGateway(obj interface{}) {
 			FieldSelector: "spec.gateway.name=" + gateway.GetName(),
 		})
 	if err != nil {
-		log.Printf("Error on deleting associated httroutes for gateway %s on namespace %s : %v", gateway.GetName(), gateway.GetNamespace(), err)
+		logger.Errorf("Error on deleting associated httroutes for gateway %s on namespace %s: %v", gateway.GetName(), gateway.GetNamespace(), err)
 	}
 	redisClient := redis.CreateClient()
 	CDN_HOSTNAME := os.Getenv("CDN_HOSTNAME")
@@ -176,6 +177,6 @@ func OnDeleteGateway(obj interface{}) {
 	}
 	err = redisClient.Del(context.Background(), strings.Replace(string(gateway.GetUID()), "-", "", -1)+"."+CDN_HOSTNAME).Err()
 	if err != nil {
-		log.Printf("Error on deleting associated redis key for gateway %s on namespace: %s : %v", gateway.GetName(), gateway.GetNamespace(), err)
+		logger.Errorf("Error on deleting associated redis key for gateway %s on namespace %s: %v", gateway.GetName(), gateway.GetNamespace(), err)
 	}
 }

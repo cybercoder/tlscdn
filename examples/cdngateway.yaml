@@ -2,6 +2,7 @@ apiVersion: cdn.ik8s.ir/v1alpha1
 kind: CdnGateway
 metadata:
   name: example
+  namespace: "1744974488950"
 spec:
   upstreams:
     - name: default

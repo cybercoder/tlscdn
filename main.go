@@ -1,18 +1,20 @@
 package main
 
 import (
-	"log"
-
 	"github.com/cybercoder/tlscdn-controller/pkg/events"
 	"github.com/cybercoder/tlscdn-controller/pkg/k8s"
+	"github.com/cybercoder/tlscdn-controller/pkg/logger"
 	"github.com/joho/godotenv"
 	"k8s.io/client-go/tools/cache"
 )
 
 func main() {
+	// Initialize the logger
+	logger.Init()
+	
 	err := godotenv.Load()
 	if err != nil {
-		log.Printf("Error loading .env file")
+		logger.Warn("Error loading .env file")
 	}
 	gatewayInformer := k8s.CreateGatewayInformer()
 	gatewayInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{

@@ -1,10 +1,10 @@
 package k8s
 
 import (
-	"log"
 	"os"
 	"path/filepath"
 
+	"github.com/cybercoder/tlscdn-controller/pkg/logger"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 
@@ -24,12 +24,12 @@ func CreateClient() *kubernetes.Clientset {
 
 	config, err := createConfig()
 	if err != nil {
-		log.Fatalf("Error creating config: %v", err)
+		logger.Fatalf("Error creating config: %v", err)
 	}
 
 	client, err = kubernetes.NewForConfig(config)
 	if err != nil {
-		log.Fatalf("Error creating dynamicClient: %v", err)
+		logger.Fatalf("Error creating dynamicClient: %v", err)
 	}
 	return client
 }
@@ -42,12 +42,12 @@ func CreateDynamicClient() *dynamic.DynamicClient {
 
 	config, err := createConfig()
 	if err != nil {
-		log.Fatalf("Error creating config: %v", err)
+		logger.Fatalf("Error creating config: %v", err)
 	}
 
 	dynamicClient, err = dynamic.NewForConfig(config)
 	if err != nil {
-		log.Fatalf("Error creating dynamicClient: %v", err)
+		logger.Fatalf("Error creating dynamicClient: %v", err)
 	}
 	return dynamicClient
 }
