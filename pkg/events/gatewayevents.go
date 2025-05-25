@@ -89,8 +89,14 @@ func OnUpdateGateway(prev interface{}, obj interface{}) {
 		}
 
 		annotations := httpRoute.GetAnnotations()
+		if annotations == nil {
+			annotations = make(map[string]string)
+		}
 		annotations["cdngateway.cdn.ik8s.ir/updated"] = time.Now().Format(time.RFC3339Nano)
 		labels := httpRoute.GetLabels()
+		// if labels == nil {
+		// 	labels = make(map[string]string)
+		// }
 		uo := &unstructured.Unstructured{
 			Object: map[string]interface{}{
 				"apiVersion": httpRoute.APIVersion,
