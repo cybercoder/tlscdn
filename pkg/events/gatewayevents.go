@@ -93,7 +93,7 @@ func OnUpdateGateway(prev interface{}, obj interface{}) {
 			annotations = make(map[string]string)
 		}
 		annotations["cdngateway.cdn.ik8s.ir/updated"] = time.Now().Format(time.RFC3339Nano)
-		labels := httpRoute.GetLabels()
+		// labels := httpRoute.GetLabels()
 		// if labels == nil {
 		// 	labels = make(map[string]string)
 		// }
@@ -109,7 +109,7 @@ func OnUpdateGateway(prev interface{}, obj interface{}) {
 			},
 		}
 		uo.SetAnnotations(annotations)
-		uo.SetLabels(labels)
+		// uo.SetLabels(labels)
 		uo.SetResourceVersion(httpRoute.GetResourceVersion())
 		_, err = k.Resource(v1alpha1.HTTPRouteGVR).Namespace(httpRoute.GetNamespace()).Update(context.Background(), uo, metav1.UpdateOptions{})
 		if err != nil {
@@ -181,8 +181,14 @@ func OnDeleteGateway(obj interface{}) {
 	if CDN_HOSTNAME == "" {
 		CDN_HOSTNAME = "tlscdn.ir"
 	}
-	err = redisClient.Del(context.Background(), strings.Replace(string(gateway.GetUID()), "-", "", -1)+"."+CDN_HOSTNAME).Err()
+	redisKey := strings.Replace(string(gateway.GetUID()), "-", "", -1) + "." + CDN_HOSTNAME
+	err = redisClient.Del(context.Background(), redisKey).Err()
 	if err != nil {
 		logger.Errorf("Error on deleting associated redis key for gateway %s on namespace %s: %v", gateway.GetName(), gateway.GetNamespace(), err)
+	}
+	err = redisClient.Publish(context.Background(), "invalidate_gateway_cache", redisKey).Err()
+	if err != nil {
+		logger.Errorf("[Delete gateway] cache invalidation, publish message for gateway %s in namespace %s was unsuccessful: %v", gateway.GetName(), gateway.GetNamespace(), err)
+		return
 	}
 }

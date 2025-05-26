@@ -149,8 +149,16 @@ func OnUpdateHTTPRoute(prev interface{}, obj interface{}) {
 		CDN_HOSTNAME = "cdntls.ir"
 	}
 	redisKey := "httproute:" + strings.Replace(string(gateway.GetUID()), "-", "", -1) + "." + CDN_HOSTNAME + ":" + httproute.Spec.Path.Type + ":" + httproute.Spec.Path.Path
-	status := redisClient.Set(context.Background(), redisKey, jsonData, 0)
-	logger.Infof("Redis set status for httproute %s: %v", httproute.GetName(), status)
+	err = redisClient.Set(context.Background(), redisKey, jsonData, 0).Err()
+	if err != nil {
+		logger.Errorf("Redis update set for httproute %s in namespace %s was unsuccessful: %v", httproute.GetName(), httproute.GetNamespace(), err)
+		return
+	}
+	err = redisClient.Publish(context.Background(), "invalidate_httproute_cache", redisKey).Err()
+	if err != nil {
+		logger.Errorf("[Update httproute] cache invalidation, publish message for httproute %s in namespace %s was unsuccessful: %v", httproute.GetName(), httproute.GetNamespace(), err)
+		return
+	}
 
 }
 
@@ -168,5 +176,10 @@ func OnDeleteHTTPRoute(obj interface{}) {
 			"Error on deleting httproute %s in namespace %s key from redis: %v",
 			u.GetName(), u.GetNamespace(), err,
 		)
+	}
+	err = redisClient.Publish(context.Background(), "invalidate_httproute_cache", httproute.Status.RedisKey).Err()
+	if err != nil {
+		logger.Errorf("[Delete httproute] cache invalidation, publish message for httproute %s in namespace %s was unsuccessful: %v", httproute.GetName(), httproute.GetNamespace(), err)
+		return
 	}
 }
