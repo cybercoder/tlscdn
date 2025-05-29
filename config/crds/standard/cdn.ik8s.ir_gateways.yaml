@@ -18,6 +18,8 @@ spec:
             spec:
               type: object
               properties:
+                domain:
+                  type: string
                 upstreams:
                   type: array
                   items:
@@ -50,6 +52,11 @@ spec:
                               type: boolean
                               default: false
       additionalPrinterColumns:
+        - name: Domain
+          type: string
+          description: CDN agteway domain.
+          jsonPath: .spec.domain
+          priority: 0
         - name: Upstreams
           type: string
           description: upstreams names
