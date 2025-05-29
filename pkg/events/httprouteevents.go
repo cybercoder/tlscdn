@@ -72,7 +72,13 @@ func OnAddHTTPRoute(obj interface{}) {
 	if CDN_HOSTNAME == "" {
 		CDN_HOSTNAME = "cdntls.ir"
 	}
-	redisKey := "httproute:" + strings.Replace(string(gateway.GetUID()), "-", "", -1) + "." + CDN_HOSTNAME + ":" + httproute.Spec.Path.Type + ":" + httproute.Spec.Path.Path
+	redisKey := ""
+	if gateway.Spec.Domain == "" {
+		redisKey = "httproute:" + strings.Replace(string(gateway.GetUID()), "-", "", -1) + "." + CDN_HOSTNAME + ":" + httproute.Spec.Path.Type + ":" + httproute.Spec.Path.Path
+	} else {
+		redisKey = "httproute:" + gateway.Spec.Domain + ":" + httproute.Spec.Path.Type + ":" + httproute.Spec.Path.Path
+	}
+
 	err = redisClient.Set(context.Background(),
 		redisKey,
 		jsonData, 0).Err()

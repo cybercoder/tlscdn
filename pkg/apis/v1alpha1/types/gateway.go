@@ -10,6 +10,7 @@ type Gateway struct {
 }
 
 type GatewaySpec struct {
+	Domain    string     `json:"domain,omitempty"`
 	Upstreams []Upstream `json:"upstreams,omitempty"`
 }
 

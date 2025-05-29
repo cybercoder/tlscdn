@@ -41,9 +41,12 @@ func OnAddGateway(obj interface{}) {
 	if CDN_HOSTNAME == "" {
 		CDN_HOSTNAME = "tlscdn.ir"
 	}
-	redisKey := strings.Replace(string(gateway.GetUID()), "-", "", -1) + "." + CDN_HOSTNAME
-	status := redisClient.Set(context.Background(), redisKey, jsonData, 0)
-	logger.Infof("Redis set status for gateway %s: %v", gateway.GetName(), status)
+	redisKey := gateway.Spec.Domain
+	if redisKey == "" {
+		redisKey = strings.Replace(string(gateway.GetUID()), "-", "", -1) + "." + CDN_HOSTNAME
+	}
+	err = redisClient.Set(context.Background(), redisKey, jsonData, 0).Err()
+	logger.Errorf("Error on Redis set for gateway %s/%s: %v", gateway.GetNamespace(), gateway.GetName(), err)
 
 }
 
