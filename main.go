@@ -11,7 +11,7 @@ import (
 func main() {
 	// Initialize the logger
 	logger.Init()
-	
+
 	err := godotenv.Load()
 	if err != nil {
 		logger.Warn("Error loading .env file")
@@ -30,12 +30,19 @@ func main() {
 		DeleteFunc: events.OnDeleteHTTPRoute,
 	})
 
+	secretInformer := k8s.CreateSecretInformer()
+	secretInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc:    events.OnAddSecret,
+		UpdateFunc: events.OnUpdateSecret,
+		DeleteFunc: events.OnDeleteSecret,
+	})
+
 	stopCh := make(chan struct{})
 
 	defer close(stopCh)
 
 	go gatewayInformer.Run(stopCh)
 	go httpRouteInformer.Run(stopCh)
-
+	go secretInformer.Run(stopCh)
 	select {}
 }
