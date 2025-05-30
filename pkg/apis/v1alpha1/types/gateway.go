@@ -12,6 +12,7 @@ type Gateway struct {
 type GatewaySpec struct {
 	Domain    string     `json:"domain,omitempty"`
 	Upstreams []Upstream `json:"upstreams,omitempty"`
+	Tls       string     `json:"tls,omitempty"`
 }
 
 type GatewayStatus struct {
