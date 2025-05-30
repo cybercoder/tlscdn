@@ -2,6 +2,7 @@ apiVersion: cdn.ik8s.ir/v1alpha1
 kind: CdnHTTPRoute
 metadata:
   name: example
+  namespace: "1744974488950"
 spec:
   gateway:
     name: example
@@ -22,6 +23,7 @@ apiVersion: cdn.ik8s.ir/v1alpha1
 kind: CdnHTTPRoute
 metadata:
   name: agenthub
+  namespace: "1744974488950"
 spec:
   gateway:
     name: agenthub
@@ -34,6 +36,7 @@ apiVersion: cdn.ik8s.ir/v1alpha1
 kind: CdnHTTPRoute
 metadata:
   name: log
+  namespace: "1744974488950"
 spec:
   gateway:
     name: log
@@ -46,6 +49,7 @@ apiVersion: cdn.ik8s.ir/v1alpha1
 kind: CdnHTTPRoute
 metadata:
   name: novinhost
+  namespace: "1744974488950"
 spec:
   gateway:
     name: novinhost
@@ -58,6 +62,7 @@ apiVersion: cdn.ik8s.ir/v1alpha1
 kind: CdnHTTPRoute
 metadata:
   name: forooz
+  namespace: "1744974488950"
 spec:
   gateway:
     name: forooz
