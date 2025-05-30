@@ -8,6 +8,7 @@ import (
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 
+	cmclient "github.com/cert-manager/cert-manager/pkg/client/clientset/versioned"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
@@ -15,6 +16,7 @@ import (
 
 var client *kubernetes.Clientset
 var dynamicClient *dynamic.DynamicClient
+var cmClient *cmclient.Clientset
 
 func CreateClient() *kubernetes.Clientset {
 	// singleton
@@ -50,6 +52,22 @@ func CreateDynamicClient() *dynamic.DynamicClient {
 		logger.Fatalf("Error creating dynamicClient: %v", err)
 	}
 	return dynamicClient
+}
+
+func CreateCertManagerClient() *cmclient.Clientset {
+	if cmClient != nil {
+		return cmClient
+	}
+	config, err := createConfig()
+	if err != nil {
+		logger.Fatalf("Error creating config: %v", err)
+	}
+
+	cmClient, err = cmclient.NewForConfig(config)
+	if err != nil {
+		logger.Fatalf("Error creating cert-manager client: %v", err)
+	}
+	return cmClient
 }
 
 func createConfig() (*rest.Config, error) {

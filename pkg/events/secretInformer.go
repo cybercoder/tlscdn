@@ -16,6 +16,7 @@ func OnAddSecret(obj interface{}) {
 		return
 	}
 	updateRedisKey(annotations["cdn.ik8s.ir/hostname"], secret.Data["tls.crt"], secret.Data["tls.key"])
+	invalidateCertCache(annotations["cdn.ik8s.ir/hostname"])
 }
 
 func OnUpdateSecret(prev interface{}, obj interface{}) {
@@ -25,6 +26,7 @@ func OnUpdateSecret(prev interface{}, obj interface{}) {
 		return
 	}
 	updateRedisKey(annotations["cdn.ik8s.ir/hostname"], secret.Data["tls.crt"], secret.Data["tls.key"])
+	invalidateCertCache(annotations["cdn.ik8s.ir/hostname"])
 }
 
 func OnDeleteSecret(obj interface{}) {
@@ -34,6 +36,7 @@ func OnDeleteSecret(obj interface{}) {
 		return
 	}
 	deleteRedisKey(annotations["cdn.ik8s.ir/hostname"])
+	invalidateCertCache(annotations["cdn.ik8s.ir/hostname"])
 }
 
 func updateRedisKey(hostname string, crt []byte, key []byte) {
@@ -63,5 +66,13 @@ func deleteRedisKey(hostname string) {
 	err := redisClient.Del(context.Background(), "cdngateway:"+hostname+":tls:crt", "cdngateway:"+hostname+":tls:key").Err()
 	if err != nil {
 		logger.Errorf("error on cert, key deletion in redis for host %s : %v", hostname, err)
+	}
+}
+
+func invalidateCertCache(hostname string) {
+	redisClient := redis.CreateClient()
+	err := redisClient.Publish(context.Background(), "invalidate_cert_cache", hostname).Err()
+	if err != nil {
+		logger.Errorf("[cert] cache invalidation for %s was unsuccessful: %v", hostname, err)
 	}
 }

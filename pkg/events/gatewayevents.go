@@ -50,6 +50,14 @@ func OnAddGateway(obj interface{}) {
 		logger.Errorf("Error on Redis set for gateway %s/%s: %v", gateway.GetNamespace(), gateway.GetName(), err)
 	}
 
+	if gateway.Spec.Domain != "" && gateway.Spec.Tls == "auto" {
+		_, err = k8s.CreateLetsEncryptWildCardCertificate(gateway.Namespace, gateway.Name, gateway.Spec.Domain)
+		if err != nil {
+			logger.Errorf("failed to create certificate for cdnGateway %s/$s: %v", gateway.Namespace, gateway.Name, err)
+		}
+		// update gateway status with certificate name or data
+	}
+
 }
 
 func OnUpdateGateway(prev interface{}, obj interface{}) {
