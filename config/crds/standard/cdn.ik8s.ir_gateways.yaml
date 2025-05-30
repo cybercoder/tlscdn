@@ -51,6 +51,9 @@ spec:
                             tlsVerify:
                               type: boolean
                               default: false
+                tls:
+                  type: string
+                  enum: [none, auto, private]
       additionalPrinterColumns:
         - name: Domain
           type: string
