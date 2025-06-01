@@ -2,7 +2,6 @@ package events
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 
 	"github.com/cybercoder/tlscdn-controller/pkg/logger"
@@ -42,24 +41,6 @@ func OnDeleteSecret(obj interface{}) {
 
 func updateRedisKey(hostname string, crt []byte, key []byte) {
 	redisClient := redis.CreateClient()
-	pipeline := redisClient.Pipeline()
-	tlsCrt, err := base64.StdEncoding.DecodeString(string(crt))
-	if err != nil {
-		logger.Errorf("error decoding tls.crt for host %s: %v", hostname, err)
-		return
-	}
-	tlsKey, err := base64.StdEncoding.DecodeString(string(key))
-	if err != nil {
-		logger.Errorf("error decoding tls.key for host %s: %v", hostname, err)
-		return
-	}
-	pipeline.Set(context.Background(), "cdngateway:"+hostname+":tls:crt", tlsCrt, 0)
-	pipeline.Set(context.Background(), "cdngateway:"+hostname+":tls:key", tlsKey, 0)
-
-	_, err = pipeline.Exec(context.Background())
-	if err != nil {
-		logger.Errorf("error on redis cert set for host %s : %v", hostname, err)
-	}
 
 	certificateData := struct {
 		Hostname string `json:"hostname"`
@@ -67,8 +48,8 @@ func updateRedisKey(hostname string, crt []byte, key []byte) {
 		Key      string `json:"key"`
 	}{
 		Hostname: hostname,
-		Crt:      string(tlsCrt),
-		Key:      string(tlsKey),
+		Crt:      string(crt),
+		Key:      string(key),
 	}
 	stringify, err := json.Marshal(certificateData)
 	if err == nil {
