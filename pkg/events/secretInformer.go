@@ -3,6 +3,7 @@ package events
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 
 	"github.com/cybercoder/tlscdn-controller/pkg/logger"
 	"github.com/cybercoder/tlscdn-controller/pkg/redis"
@@ -58,6 +59,20 @@ func updateRedisKey(hostname string, crt []byte, key []byte) {
 	_, err = pipeline.Exec(context.Background())
 	if err != nil {
 		logger.Errorf("error on redis cert set for host %s : %v", hostname, err)
+	}
+
+	certificateData := struct {
+		Hostname string `json:"hostname"`
+		Crt      string `json:"crt"`
+		Key      string `json:"key"`
+	}{
+		Hostname: hostname,
+		Crt:      string(tlsCrt),
+		Key:      string(tlsKey),
+	}
+	stringify, err := json.Marshal(certificateData)
+	if err == nil {
+		redisClient.Publish(context.Background(), "new_cert", stringify)
 	}
 }
 
