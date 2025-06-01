@@ -131,6 +131,27 @@ func OnUpdateGateway(prev interface{}, obj interface{}) {
 		}
 		logger.Infof("Updated httproute %s for gateway %s", httpRoute.GetName(), gateway.GetName())
 	}
+
+	if gateway.Spec.Domain != "" && gateway.Spec.Tls == "auto" && gateway.Spec.Domain != oldgateway.Spec.Domain {
+		if oldgateway.Spec.Domain != "" {
+			// delete certificate for old domain
+			err = k8s.DeleteLetsEncryptWildCardCertificate(gateway.Namespace, gateway.Name)
+			if err != nil {
+				logger.Errorf("failed to delete old certificate for gateway %s/%s : %v", gateway.Name, gateway.Namespace)
+			}
+			// invalidate cert cache for old domain.
+			redisClient := redis.CreateClient()
+			err = redisClient.Publish(context.Background(), "invalidate_gateway_cache", oldgateway.Spec.Domain).Err()
+			if err != nil {
+				logger.Errorf("[Update gateway] certiticate cache invalidation, publish message for gateway %s/%s was unsuccessful: %v", gateway.GetName(), gateway.GetNamespace(), err)
+			}
+		}
+		_, err = k8s.CreateLetsEncryptWildCardCertificate(gateway.Namespace, gateway.Name, gateway.Spec.Domain)
+		if err != nil {
+			logger.Errorf("failed to create certificate for cdnGateway %s/$s: %v", gateway.Namespace, gateway.Name, err)
+		}
+		// update gateway status with certificate name or data
+	}
 }
 
 func convertUnstructToGateway(obj interface{}) (*v1alpha1Types.Gateway, error) {

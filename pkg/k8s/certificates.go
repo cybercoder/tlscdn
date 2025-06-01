@@ -35,9 +35,10 @@ func CreateLetsEncryptWildCardCertificate(namespace string, gateway string, host
 	}
 
 	cmClient = CreateCertManagerClient()
-	crt, err := cmClient.CertmanagerV1().Certificates(namespace).Create(context.Background(), cert, metav1.CreateOptions{})
-	if err != nil {
-		return nil, err
-	}
-	return crt, nil
+	return cmClient.CertmanagerV1().Certificates(namespace).Create(context.Background(), cert, metav1.CreateOptions{})
+}
+
+func DeleteLetsEncryptWildCardCertificate(namespace string, name string) error {
+	cmClient = CreateCertManagerClient()
+	return cmClient.CertmanagerV1().Certificates(namespace).Delete(context.Background(), name, metav1.DeleteOptions{})
 }
