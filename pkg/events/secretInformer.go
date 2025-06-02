@@ -15,7 +15,9 @@ func OnAddSecret(obj interface{}) {
 	if annotations == nil || annotations["cdn.ik8s.ir/hostname"] == "" || annotations["cert-manager.io/certificate-name"] == "" {
 		return
 	}
-	updateRedisKey(annotations["cdn.ik8s.ir/hostname"], secret.Data["tls.crt"], secret.Data["tls.key"])
+	logger.Info("cdn.ik8s.ir/hostname:", annotations["cdn.ik8s.ir/hostname"])
+	upsertCertificateToRedis(annotations["cdn.ik8s.ir/hostname"], secret.Data["tls.crt"], secret.Data["tls.key"])
+	publishCert(annotations["cdn.ik8s.ir/hostname"], secret.Data["tls.crt"], secret.Data["tls.key"])
 }
 
 func OnUpdateSecret(prev interface{}, obj interface{}) {
@@ -24,7 +26,8 @@ func OnUpdateSecret(prev interface{}, obj interface{}) {
 	if annotations == nil || annotations["cdn.ik8s.ir/hostname"] == "" || annotations["cert-manager.io/certificate-name"] == "" {
 		return
 	}
-	updateRedisKey(annotations["cdn.ik8s.ir/hostname"], secret.Data["tls.crt"], secret.Data["tls.key"])
+	upsertCertificateToRedis(annotations["cdn.ik8s.ir/hostname"], secret.Data["tls.crt"], secret.Data["tls.key"])
+	publishCert(annotations["cdn.ik8s.ir/hostname"], secret.Data["tls.crt"], secret.Data["tls.key"])
 }
 
 func OnDeleteSecret(obj interface{}) {
@@ -33,10 +36,11 @@ func OnDeleteSecret(obj interface{}) {
 	if annotations == nil || annotations["cdn.ik8s.ir/hostname"] == "" || annotations["cert-manager.io/certificate-name"] == "" {
 		return
 	}
+	deleteRedisKey(annotations["cdn.ik8s.ir/hostname"])
 	invalidateCertCache(annotations["cdn.ik8s.ir/hostname"])
 }
 
-func updateRedisKey(hostname string, crt []byte, key []byte) {
+func publishCert(hostname string, crt []byte, key []byte) {
 	redisClient := redis.CreateClient()
 
 	certificateData := struct {
@@ -49,19 +53,39 @@ func updateRedisKey(hostname string, crt []byte, key []byte) {
 		Key:      string(key),
 	}
 	stringify, err := json.Marshal(certificateData)
-	if err == nil {
-		redisClient.Publish(context.Background(), "new_cert", stringify)
-		
+	if err != nil {
+		logger.Errorf("Failed on json marshal certificate: %v", err)
+		return
+	}
+	status := redisClient.Publish(context.Background(), "new_cert", stringify)
+	logger.Info("status is: %v", status)
+}
+
+func upsertCertificateToRedis(hostname string, crt []byte, key []byte) {
+	redisClient := redis.CreateClient()
+	certificateData := struct {
+		Hostname string `json:"hostname"`
+		Crt      string `json:"crt"`
+		Key      string `json:"key"`
+	}{
+		Hostname: hostname,
+		Crt:      string(crt),
+		Key:      string(key),
+	}
+
+	err := redisClient.HSet(context.Background(), hostname+":tls", certificateData, 0).Err()
+	if err != nil {
+		logger.Errorf("error on redis cert set for host %s : %v", hostname, err)
 	}
 }
 
-// func deleteRedisKey(hostname string) {
-// 	redisClient := redis.CreateClient()
-// 	err := redisClient.Del(context.Background(), "cdngateway:"+hostname+":tls:crt", "cdngateway:"+hostname+":tls:key").Err()
-// 	if err != nil {
-// 		logger.Errorf("error on cert, key deletion in redis for host %s : %v", hostname, err)
-// 	}
-// }
+func deleteRedisKey(hostname string) {
+	redisClient := redis.CreateClient()
+	err := redisClient.Del(context.Background(), hostname+":tls").Err()
+	if err != nil {
+		logger.Errorf("error on cert, key deletion in redis for host %s : %v", hostname, err)
+	}
+}
 
 func invalidateCertCache(hostname string) {
 	redisClient := redis.CreateClient()
