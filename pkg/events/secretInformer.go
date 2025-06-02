@@ -63,14 +63,10 @@ func publishCert(hostname string, crt []byte, key []byte) {
 
 func upsertCertificateToRedis(hostname string, crt []byte, key []byte) {
 	redisClient := redis.CreateClient()
-	certificateData := struct {
-		Hostname string `json:"hostname"`
-		Crt      string `json:"crt"`
-		Key      string `json:"key"`
-	}{
-		Hostname: hostname,
-		Crt:      string(crt),
-		Key:      string(key),
+	certificateData := map[string]interface{}{
+		"hostname": hostname,
+		"crt":      string(crt),
+		"key":      string(key),
 	}
 
 	err := redisClient.HSet(context.Background(), hostname+":tls", certificateData, 0).Err()
