@@ -1,6 +1,7 @@
 package k8s
 
 import (
+	"github.com/cybercoder/tlscdn-controller/pkg/apis/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic/dynamicinformer"
 	"k8s.io/client-go/informers"
@@ -10,6 +11,7 @@ import (
 var gatewayInformer cache.SharedIndexInformer
 var upstreamInformer cache.SharedIndexInformer
 var httprouteInformer cache.SharedIndexInformer
+var wafRuleInformer cache.SharedIndexInformer
 var secretInformer cache.SharedIndexInformer
 
 var gatewayGVR = schema.GroupVersionResource{
@@ -55,4 +57,13 @@ func CreateSecretInformer() cache.SharedIndexInformer {
 	informerfactory := informers.NewSharedInformerFactory(CreateClient(), 0)
 	secretInformer = informerfactory.Core().V1().Secrets().Informer()
 	return secretInformer
+}
+
+func CreateWafRuleInformer() cache.SharedIndexInformer {
+	if wafRuleInformer != nil {
+		return wafRuleInformer
+	}
+	informerFactory := dynamicinformer.NewFilteredDynamicSharedInformerFactory(CreateDynamicClient(), 0, "", nil)
+	wafRuleInformer = informerFactory.ForResource(v1alpha1.WafRuleGVR).Informer()
+	return wafRuleInformer
 }

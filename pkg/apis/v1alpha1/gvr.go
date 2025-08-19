@@ -14,4 +14,10 @@ var (
 		Version:  "v1alpha1",
 		Resource: "cdngateways",
 	}
+
+	WafRuleGVR = schema.GroupVersionResource{
+		Group:    "cdn.ik8s.ir",
+		Version:  "v1alpha1",
+		Resource: "wafrules",
+	}
 )
