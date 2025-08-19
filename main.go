@@ -30,6 +30,11 @@ func main() {
 		DeleteFunc: events.OnDeleteHTTPRoute,
 	})
 
+	wafRulesInformer := k8s.CreateWafRuleInformer()
+	wafRulesInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc: events.OnAddWafRule,
+	})
+
 	secretInformer := k8s.CreateSecretInformer()
 	secretInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    events.OnAddSecret,
@@ -43,6 +48,7 @@ func main() {
 
 	go gatewayInformer.Run(stopCh)
 	go httpRouteInformer.Run(stopCh)
+	go wafRulesInformer.Run(stopCh)
 	go secretInformer.Run(stopCh)
 	select {}
 }
