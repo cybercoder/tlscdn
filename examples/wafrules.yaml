@@ -1,0 +1,78 @@
+apiVersion: cdn.ik8s.ir/v1alpha1
+kind: WAFRule
+metadata:
+  name: block-malicious-ip
+  namespace: default
+spec:
+  gateway:
+    name: gw1
+  ruleId: 1
+  phase: 1
+  action: deny
+  operator: ipMatch
+  variables:
+    - name: REQUEST_HEADERS
+      selector: X-Client-IP # Specific header selector
+  match: "1.2.3.4" # IP to block
+  status: 403 # HTTP status for deny
+  metadata:
+    severity: critical
+    message: "Blocked known malicious IP"
+    tags:
+      - "security"
+      - "ip-blocking"
+      - "threat-intel"
+---
+apiVersion: cdn.ik8s.ir/v1alpha1
+kind: WAFRule
+metadata:
+  name: block-admin-access
+  namespace: default
+spec:
+  gateway:
+    name: gw2
+  ruleId: 2
+  phase: 1
+  action: deny
+  operator: contains
+  variables:
+    - name: REQUEST_HEADERS
+      selector: X-Request-Uri # Specific header selector
+  match: "/admin" # Path to block
+  status: 404 # Return 404 to obscure existence
+  transformations:
+    - lowercase # Optional: case-insensitive matching
+  metadata:
+    severity: critical
+    message: "Blocked admin path access"
+    tags:
+      - "authentication"
+      - "admin-protection"
+      - "OWASP_CRS"
+---
+apiVersion: cdn.ik8s.ir/v1alpha1
+kind: WAFRule
+metadata:
+  name: sql-injection-prevention
+  namespace: default
+spec:
+  gateway:
+    name: gw3
+  ruleId: 942100
+  phase: 2
+  action: block
+  operator: regex
+  variables:
+    - name: REQUEST_URI
+    - name: ARGS
+  transformations:
+    - urlDecode
+  match: "(?:union(?:[^a]|a(?:ll|rray))|select(?:[^a]|a(?:ll|rg))|insert(?:[^i]|i(?:nto|f))|update(?:[^d]|d(?:ate|elete))|delete(?:[^f]|f(?:rom|or))|drop(?:[^t]|t(?:able|runcate))"
+  metadata:
+    severity: critical
+    message: "SQL Injection Attack Detected"
+    tags:
+      - "attack"
+      - "sql-injection"
+      - "OWASP_CRS"
+  status: 403
