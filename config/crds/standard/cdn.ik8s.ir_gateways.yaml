@@ -54,6 +54,9 @@ spec:
                 tls:
                   type: string
                   enum: [none, auto, private]
+                wafEnabled:
+                  type: boolean
+                  default: false
       additionalPrinterColumns:
         - name: Domain
           type: string
