@@ -33,7 +33,7 @@ func OnAddWafRule(obj interface{}) {
 	}
 
 	redisClient := redis.CreateClient()
-	redisKey := "WAF_RULE:" + string(gName) + ":" + strconv.Itoa(wafrule.Spec.RuleID)
+	redisKey := "WAF_RULE:" + wafrule.GetNamespace() + ":" + string(gName) + ":" + strconv.Itoa(wafrule.Spec.RuleID)
 
 	secRule := waf.RuleToSecLang(&wafrule)
 	logger.Debugf("seclang rule: %v", secRule)
