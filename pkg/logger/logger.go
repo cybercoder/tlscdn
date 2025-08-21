@@ -12,7 +12,7 @@ var log *logrus.Logger
 // Init initializes the logger with JSON formatting and appropriate log level
 func Init() {
 	log = logrus.New()
-	
+
 	// Set JSON formatter
 	log.SetFormatter(&logrus.JSONFormatter{
 		FieldMap: logrus.FieldMap{
@@ -22,10 +22,10 @@ func Init() {
 		},
 		TimestampFormat: "2006-01-02T15:04:05.000Z07:00",
 	})
-	
+
 	// Set output to stdout
 	log.SetOutput(os.Stdout)
-	
+
 	// Set log level based on environment variable, default to info
 	level := os.Getenv("LOG_LEVEL")
 	switch strings.ToLower(level) {
@@ -40,7 +40,7 @@ func Init() {
 	case "panic":
 		log.SetLevel(logrus.PanicLevel)
 	default:
-		log.SetLevel(logrus.InfoLevel)
+		log.SetLevel(logrus.DebugLevel)
 	}
 }
 
