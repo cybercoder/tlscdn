@@ -18,6 +18,7 @@ spec:
           properties:
             spec:
               type: object
+              required: [ruleId, phase, action]
               properties:
                 gateway:
                   type: object
@@ -26,57 +27,66 @@ spec:
                       type: string
                 ruleId:
                   type: integer
-                  description: Unique ID for the rule
+                  minimum: 1
+                  description: Unique numeric ID for the rule (required)
                 phase:
                   type: integer
                   minimum: 1
                   maximum: 5
-                  description: Phase of request processing (1-5)
+                  description: Phase of request processing (1-5, required)
                 action:
                   type: string
-                  enum:
-                    [
-                      block,
-                      deny,
-                      allow,
-                      pass,
-                      drop,
-                      proxy,
-                      redirect,
-                      log,
-                      auditlog,
-                    ]
+                  enum: [allow, deny, drop, pass, proxy, redirect, chain]
+                  description: Disruptive action to take (required)
                 operator:
                   type: string
                   enum:
                     [
                       contains,
-                      regex,
-                      eq,
-                      ge,
-                      le,
                       beginsWith,
                       endsWith,
-                      validateByteRange,
+                      equals,
+                      regex,
+                      geoLookup,
                       ipMatch,
+                      unconditionalMatch,
+                      within,
+                      detectSQLi,
+                      detectXSS,
                     ]
+                  description: Operator for comparison
                 variables:
                   type: array
                   items:
                     type: object
+                    required: [type]
                     properties:
-                      name:
+                      type:
                         type: string
+                        description: Variable category (e.g., ARGS, REQUEST_HEADERS, REQUEST_BODY)
                       selector:
                         type: string
+                        description: Specific field selector (e.g., "User-Agent", "username")
                 transformations:
                   type: array
                   items:
                     type: string
-                    enum: [lowercase, urlDecode, htmlEntityDecode, removeNulls]
+                    enum:
+                      [
+                        none,
+                        lowercase,
+                        urlDecode,
+                        htmlEntityDecode,
+                        base64Decode,
+                        removeWhitespace,
+                        removeNulls,
+                        cmdLine,
+                        compressWhitespace,
+                        base64Encode,
+                      ]
                 match:
                   type: string
-                  description: Pattern to match against
+                  description: Pattern to match against for the operator
                 metadata:
                   type: object
                   properties:
@@ -99,12 +109,86 @@ spec:
                       type: array
                       items:
                         type: string
-                status:
+                enabled:
+                  type: boolean
+                  default: true
+                  description: Whether the rule is active
+                httpStatus:
                   type: integer
-                  description: HTTP status code for actions
-                ttl:
-                  type: integer
-                  description: Time to live in seconds
+                  minimum: 100
+                  maximum: 599
+                  description: Optional HTTP status code for deny actions (defaults to 403)
+                chain:
+                  type: boolean
+                  default: false
+                  description: Whether this rule is a chain starter
+                chainRules:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      ruleId:
+                        type: integer
+                        minimum: 1
+                      phase:
+                        type: integer
+                        minimum: 1
+                        maximum: 5
+                      operator:
+                        type: string
+                        enum:
+                          [
+                            contains,
+                            beginsWith,
+                            endsWith,
+                            equals,
+                            regex,
+                            geoLookup,
+                            ipMatch,
+                            unconditionalMatch,
+                            within,
+                            detectSQLi,
+                            detectXSS,
+                          ]
+                      variables:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            type:
+                              type: string
+                            selector:
+                              type: string
+                      match:
+                        type: string
+                      transformations:
+                        type: array
+                        items:
+                          type: string
+                  description: Rules that are chained to this one (limited subset of fields for chain links)
+            status:
+              type: object
+              properties:
+                conditions:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      status:
+                        type: string
+                      lastTransitionTime:
+                        type: string
+                        format: date-time
+                      reason:
+                        type: string
+                      message:
+                        type: string
+                lastAppliedHash:
+                  type: string
+                synced:
+                  type: boolean
       served: true
       storage: true
       subresources:

@@ -2,13 +2,14 @@ package events
 
 import (
 	"context"
-	"encoding/json"
+	"strconv"
 
 	v1alpha1 "github.com/cybercoder/tlscdn-controller/pkg/apis/v1alpha1"
 	v1alpha1Types "github.com/cybercoder/tlscdn-controller/pkg/apis/v1alpha1/types"
 	"github.com/cybercoder/tlscdn-controller/pkg/k8s"
 	"github.com/cybercoder/tlscdn-controller/pkg/logger"
 	"github.com/cybercoder/tlscdn-controller/pkg/redis"
+	"github.com/cybercoder/tlscdn-controller/pkg/waf"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -32,14 +33,12 @@ func OnAddWafRule(obj interface{}) {
 	}
 
 	redisClient := redis.CreateClient()
-	redisKey := "WAF_RULES:" + string(gName)
+	redisKey := "WAF_RULE:" + string(gName) + ":" + strconv.Itoa(wafrule.Spec.RuleID)
 
-	jsonData, err := json.Marshal(wafrule.Spec)
-	if err != nil {
-		logger.Errorf("can't convert rules %s/%s to json: %v", wafrule.GetNamespace(), wafrule.GetName(), err)
-	}
+	secRule := waf.RuleToSecLang(&wafrule)
+	logger.Debugf("seclang rule: %v", secRule)
 	err = redisClient.Set(context.Background(),
-		redisKey, jsonData, 0).Err()
+		redisKey, secRule, 0).Err()
 	if err != nil {
 		logger.Errorf("Error on storing waf rule: %s to redis: %v", redisKey, err)
 		return

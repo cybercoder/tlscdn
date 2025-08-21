@@ -58,7 +58,7 @@ func publishCert(hostname string, crt []byte, key []byte) {
 		return
 	}
 	status := redisClient.Publish(context.Background(), "new_cert", stringify)
-	logger.Info("status is: %v", status)
+	logger.Debugf("status is: %v", status)
 }
 
 func upsertCertificateToRedis(hostname string, crt []byte, key []byte) {

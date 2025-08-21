@@ -43,7 +43,7 @@ func OnAddGateway(obj interface{}) {
 	}
 	redisKey := gateway.Spec.Domain
 	if redisKey == "" {
-		redisKey = strings.Replace(string(gateway.GetUID()), "-", "", -1) + "." + CDN_HOSTNAME
+		redisKey = strings.ReplaceAll(string(gateway.GetUID()), "-", "") + "." + CDN_HOSTNAME
 	}
 	err = redisClient.Set(context.Background(), redisKey, jsonData, 0).Err()
 	if err != nil {
@@ -53,7 +53,7 @@ func OnAddGateway(obj interface{}) {
 	if gateway.Spec.Domain != "" && gateway.Spec.Tls == "auto" {
 		_, err = k8s.CreateLetsEncryptWildCardCertificate(gateway.Namespace, gateway.Name, gateway.Spec.Domain)
 		if err != nil {
-			logger.Errorf("failed to create certificate for cdnGateway %s/$s: %v", gateway.Namespace, gateway.Name, err)
+			logger.Errorf("failed to create certificate for cdnGateway %s/%s: %v", gateway.Namespace, gateway.Name, err)
 		}
 		// update gateway status with certificate name or data
 	}
@@ -148,7 +148,7 @@ func OnUpdateGateway(prev interface{}, obj interface{}) {
 		}
 		_, err = k8s.CreateLetsEncryptWildCardCertificate(gateway.Namespace, gateway.Name, gateway.Spec.Domain)
 		if err != nil {
-			logger.Errorf("failed to create certificate for cdnGateway %s/$s: %v", gateway.Namespace, gateway.Name, err)
+			logger.Errorf("failed to create certificate for cdnGateway %s/%s: %v", gateway.Namespace, gateway.Name, err)
 		}
 		// update gateway status with certificate name or data
 	}
