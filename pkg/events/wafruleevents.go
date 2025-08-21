@@ -29,7 +29,7 @@ func OnAddWafRule(obj interface{}) {
 	_, err := k.Resource(v1alpha1.GatewayGVR).Namespace(wafrule.GetNamespace()).Get(context.TODO(), string(gName), metav1.GetOptions{})
 	if err != nil {
 		logger.Errorf("Gateway %s not found in namespace %s, orphaned wafrule: %s, err: %v", gName, wafrule.GetNamespace(), wafrule.GetName(), err)
-		// return
+		return
 	}
 
 	redisClient := redis.CreateClient()
