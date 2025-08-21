@@ -6,6 +6,7 @@ require (
 	github.com/cert-manager/cert-manager v1.17.2
 	github.com/joho/godotenv v1.5.1
 	github.com/redis/go-redis/v9 v9.8.0
+	github.com/samber/lo v1.51.0
 	github.com/sirupsen/logrus v1.9.3
 	k8s.io/api v0.33.0
 	k8s.io/apimachinery v0.33.0
