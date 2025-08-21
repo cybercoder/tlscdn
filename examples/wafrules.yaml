@@ -1,6 +1,216 @@
 apiVersion: cdn.ik8s.ir/v1alpha1
 kind: WAFRule
 metadata:
+  name: log-api-calls
+  namespace: default
+spec:
+  gateway:
+    name: my-gateway
+  ruleId: 1110
+  phase: 1
+  action: pass
+  operator: beginsWith
+  variables:
+    - type: REQUEST_HEADERS
+      selector: x-tlscdn-waf-Request-Uri
+  match: "/api/"
+  metadata:
+    severity: "info"
+    message: "API call detected"
+    tags: ["monitoring", "api"]
+  enabled: true
+---
+apiVersion: cdn.ik8s.ir/v1alpha1
+kind: WAFRule
+metadata:
+  name: rate-limit-ip
+  namespace: default
+spec:
+  gateway:
+    name: my-gateway
+  ruleId: 1109
+  phase: 1
+  action: deny
+  operator: ipMatch
+  variables:
+    - type: REQUEST_HEADERS
+      selector: x-tlscdn-waf-Client-IP
+  match: "192.168.1.100"
+  chain: true
+  chainRules:
+    - operator: gt
+      variables:
+        - type: TX
+          selector: ANOMALY_SCORE
+      match: "10"
+  metadata:
+    severity: "warning"
+    message: "Rate limit exceeded for IP"
+    tags: ["ratelimit"]
+  enabled: true
+---
+apiVersion: cdn.ik8s.ir/v1alpha1
+kind: WAFRule
+metadata:
+  name: block-param-injection
+  namespace: default
+spec:
+  gateway:
+    name: my-gateway
+  ruleId: 1108
+  phase: 1
+  action: deny
+  operator: contains
+  variables:
+    - type: REQUEST_HEADERS
+      selector: x-tlscdn-waf-Query-String
+  match: "etc/passwd"
+  transformations: ["urlDecode", "lowercase"]
+  metadata:
+    severity: "critical"
+    message: "Local file inclusion attempt"
+    tags: ["lfi", "attack"]
+  enabled: true
+---
+apiVersion: cdn.ik8s.ir/v1alpha1
+kind: WAFRule
+metadata:
+  name: block-bad-user-agents
+  namespace: default
+spec:
+  gateway:
+    name: my-gateway
+  ruleId: 1106
+  phase: 1
+  action: deny
+  operator: contains
+  variables:
+    - type: REQUEST_HEADERS
+      selector: x-tlscdn-waf-User-Agent
+  match: "nmap sqlmap wget curl"
+  transformations: ["lowercase"]
+  metadata:
+    severity: "warning"
+    message: "Suspicious user agent detected"
+    tags: ["scanner", "bot"]
+  enabled: true
+---
+apiVersion: cdn.ik8s.ir/v1alpha1
+kind: WAFRule
+metadata:
+  name: allow-internal-ips
+  namespace: default
+spec:
+  gateway:
+    name: my-gateway
+  ruleId: 1105
+  phase: 1
+  action: allow
+  operator: ipMatch
+  variables:
+    - type: REQUEST_HEADERS
+      selector: x-tlscdn-waf-Client-IP
+  match: "192.168.0.0/16 10.0.0.0/8"
+  metadata:
+    severity: "info"
+    message: "Internal IP allowed"
+    tags: ["ip-allowlist"]
+  enabled: true
+---
+apiVersion: cdn.ik8s.ir/v1alpha1
+kind: WAFRule
+metadata:
+  name: restrict-methods
+  namespace: default
+spec:
+  gateway:
+    name: my-gateway
+  ruleId: 1104
+  phase: 1
+  action: deny
+  operator: within
+  variables:
+    - type: REQUEST_HEADERS
+      selector: x-tlscdn-waf-Method
+  match: "TRACE TRACK CONNECT"
+  metadata:
+    severity: "warning"
+    message: "Dangerous HTTP method attempted"
+    tags: ["http-method", "security"]
+  enabled: true
+---
+apiVersion: cdn.ik8s.ir/v1alpha1
+kind: WAFRule
+metadata:
+  name: block-xss-uri
+  namespace: default
+spec:
+  gateway:
+    name: my-gateway
+  ruleId: 1103
+  phase: 1
+  action: deny
+  operator: contains
+  variables:
+    - type: REQUEST_HEADERS
+      selector: x-tlscdn-waf-Request-Uri
+  match: "<script>"
+  transformations: ["htmlEntityDecode", "lowercase"]
+  metadata:
+    severity: "critical"
+    message: "XSS attempt in URI"
+    tags: ["xss", "attack"]
+  enabled: true
+---
+apiVersion: cdn.ik8s.ir/v1alpha1
+kind: WAFRule
+metadata:
+  name: block-sqli-query
+  namespace: default
+spec:
+  gateway:
+    name: my-gateway
+  ruleId: 1102
+  phase: 1
+  action: deny
+  operator: contains
+  variables:
+    - type: REQUEST_HEADERS
+      selector: x-tlscdn-waf-Query-String
+  match: "union select"
+  transformations: ["lowercase", "urlDecode"]
+  metadata:
+    severity: "critical"
+    message: "SQL injection in query string"
+    tags: ["sqli", "attack"]
+  enabled: true
+---
+apiVersion: cdn.ik8s.ir/v1alpha1
+kind: WAFRule
+metadata:
+  name: block-uri-attacks
+  namespace: default
+spec:
+  gateway:
+    name: my-gateway
+  ruleId: 1101
+  phase: 1
+  action: deny
+  operator: contains
+  variables:
+    - type: REQUEST_HEADERS
+      selector: x-tlscdn-waf-Request-Uri
+  match: "../"
+  transformations: ["urlDecode"]
+  metadata:
+    severity: "critical"
+    message: "Path traversal attack detected in URI"
+    tags: ["path-traversal", "attack"]
+  enabled: true
+---
+apiVersion: cdn.ik8s.ir/v1alpha1
+kind: WAFRule
+metadata:
   name: block-admin-access
   namespace: default
 spec:
@@ -12,7 +222,7 @@ spec:
   operator: contains
   variables:
     - type: REQUEST_HEADERS
-      selector: X-Request-Uri
+      selector: x-tlscdn-waf-Request-Uri
   match: "admin"
   transformations: ["lowercase", "urlDecode"]
   metadata:
