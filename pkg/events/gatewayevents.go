@@ -27,10 +27,11 @@ func OnAddGateway(obj interface{}) {
 
 	redisClient := redis.CreateClient()
 	data := map[string]interface{}{
-		"name":      gateway.GetName(),
-		"namespace": gateway.GetNamespace(),
-		"UID":       gateway.GetUID(),
-		"upstreams": gateway.Spec.Upstreams,
+		"name":        gateway.GetName(),
+		"namespace":   gateway.GetNamespace(),
+		"UID":         gateway.GetUID(),
+		"upstreams":   gateway.Spec.Upstreams,
+		"waf_enabled": gateway.Spec.WafEnabled,
 	}
 
 	jsonData, err := json.Marshal(data)
@@ -215,7 +216,7 @@ func OnDeleteGateway(obj interface{}) {
 	if CDN_HOSTNAME == "" {
 		CDN_HOSTNAME = "tlscdn.ir"
 	}
-	redisKey := strings.Replace(string(gateway.GetUID()), "-", "", -1) + "." + CDN_HOSTNAME
+	redisKey := strings.ReplaceAll(string(gateway.GetUID()), "-", "") + "." + CDN_HOSTNAME
 	err = redisClient.Del(context.Background(), redisKey).Err()
 	if err != nil {
 		logger.Errorf("Error on deleting associated redis key for gateway %s on namespace %s: %v", gateway.GetName(), gateway.GetNamespace(), err)

@@ -10,9 +10,10 @@ type Gateway struct {
 }
 
 type GatewaySpec struct {
-	Domain    string     `json:"domain,omitempty"`
-	Upstreams []Upstream `json:"upstreams,omitempty"`
-	Tls       string     `json:"tls,omitempty"`
+	Domain     string     `json:"domain,omitempty"`
+	Upstreams  []Upstream `json:"upstreams,omitempty"`
+	Tls        string     `json:"tls,omitempty"`
+	WafEnabled bool       `json:"wafEnabled,omitempty"`
 }
 
 type GatewayStatus struct {
