@@ -212,10 +212,10 @@ apiVersion: cdn.ik8s.ir/v1alpha1
 kind: WAFRule
 metadata:
   name: block-admin-access
-  namespace: default
+  namespace: "1731930192436"
 spec:
   gateway:
-    name: my-gateway
+    name: korra
   ruleId: 1001
   phase: 1
   action: deny
