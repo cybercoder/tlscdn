@@ -6,9 +6,9 @@ spec:
   group: cdn.ik8s.ir
   names:
     kind: WAFRule
-    listKind: WAFRuleList
     plural: wafrules
     singular: wafrule
+    listKind: WAFRuleList
   scope: Namespaced
   versions:
     - name: v1alpha1
@@ -20,150 +20,113 @@ spec:
           properties:
             spec:
               type: object
-              required: [ruleId, phase, action]
+              required: [cdnGateway, ruleId, phase, action, ruleLogic]
               properties:
-                gateway:
+                cdnGateway:
                   type: object
                   properties:
-                    name: { type: string }
-                    namespace: { type: string }
-                ruleId: { type: integer, minimum: 1 }
-                phase: { type: integer, minimum: 1, maximum: 5 }
+                    name:
+                      type: string
+                ruleId:
+                  type: integer
+                  minimum: 1
+                phase:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
                 action:
                   type: string
                   enum:
-                    [
-                      allow,
-                      deny,
-                      drop,
-                      pass,
-                      proxy,
-                      redirect,
-                      chain,
-                      log,
-                      auditlog,
-                      status,
-                      capture,
-                      t,
-                      msg,
-                      tag,
-                      logdata,
-                      severity,
-                      multiMatch,
-                      ver,
-                      rev,
-                      id,
-                      skip,
-                      skipAfter,
-                      ctl,
-                      initcol,
-                      setenv,
-                      setvar,
-                    ]
-                operator:
-                  type: string
-                match: { type: string }
-                variables:
+                    - allow
+                    - deny
+                    - drop
+                    - pass
+                    - proxy
+                    - redirect
+                    - log
+                    - auditlog
+                    - status
+                    - capture
+                enabled:
+                  type: boolean
+                  default: true
+                httpStatus:
+                  type: integer
+                  minimum: 100
+                  maximum: 599
+                ruleLogic:
+                  type: object
+                  required: [type]
+                  properties:
+                    type:
+                      type: string
+                      enum: ["AND", "OR", "MATCH"]
+                    operator:
+                      type: string
+                    match:
+                      type: string
+                    variables:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          type:
+                            type: string
+                          selector:
+                            type: string
+                          count:
+                            type: boolean
+                            default: false
+                          exclusion:
+                            type: boolean
+                            default: false
+                          key:
+                            type: string
+                    transformations:
+                      type: array
+                      items:
+                        type: string
+                        enum:
+                          [
+                            "none",
+                            "lowercase",
+                            "urlDecode",
+                            "htmlEntityDecode",
+                            "base64Decode",
+                            "removeWhitespace",
+                            "removeNulls",
+                            "cmdLine",
+                            "compressWhitespace",
+                            "base64Encode",
+                          ]
+                    children:
+                      type: array
+                      items:
+                        type: object
+                        properties: {} # inline recursion
+            status:
+              type: object
+              properties:
+                conditions:
                   type: array
                   items:
                     type: object
                     properties:
-                      type: { type: string }
-                      selector: { type: string }
-                      count: { type: boolean, default: false }
-                      exclusion: { type: boolean, default: false }
-                      key: { type: string }
-                transformations:
-                  type: array
-                  items: { type: string }
-                metadata:
-                  type: object
-                  properties:
-                    severity: { type: string }
-                    message: { type: string }
-                    tags:
-                      type: array
-                      items: { type: string }
-                enabled: { type: boolean, default: true }
-                httpStatus: { type: integer, minimum: 100, maximum: 599 }
-                actionConfig:
-                  type: object
-                  properties:
-                    redirect:
-                      type: object
-                      properties: { url: { type: string } }
-                    status:
-                      type: object
-                      properties: { code: { type: integer } }
-                    setvar:
-                      type: object
-                      properties:
-                        variable: { type: string }
-                        value: { type: string }
-                        scope: { type: string }
-                    initcol:
-                      type: object
-                      properties:
-                        collection: { type: string }
-                        variable: { type: string }
-                    skip: { type: integer }
-                    skipAfter: { type: string }
-                    logdata: { type: string }
-                chainRules:
-                  type: array
-                  items:
-                    type: object
-                    properties: # inline same as WAFRuleSpec
-                      ruleId: { type: integer, minimum: 1 }
-                      phase: { type: integer, minimum: 1, maximum: 5 }
-                      action: { type: string }
-                      operator: { type: string }
-                      match: { type: string }
-                      variables:
-                        type: array
-                        items:
-                          type: object
-                          properties:
-                            type: { type: string }
-                            selector: { type: string }
-                            count: { type: boolean, default: false }
-                            exclusion: { type: boolean, default: false }
-                            key: { type: string }
-                      transformations:
-                        type: array
-                        items: { type: string }
-                      metadata:
-                        type: object
-                        properties:
-                          severity: { type: string }
-                          message: { type: string }
-                          tags:
-                            type: array
-                            items: { type: string }
-                      enabled: { type: boolean, default: true }
-                      httpStatus: { type: integer, minimum: 100, maximum: 599 }
-                      actionConfig:
-                        type: object
-                        properties:
-                          redirect:
-                            type: object
-                            properties: { url: { type: string } }
-                          status:
-                            type: object
-                            properties: { code: { type: integer } }
-                          setvar:
-                            type: object
-                            properties:
-                              variable: { type: string }
-                              value: { type: string }
-                              scope: { type: string }
-                          initcol:
-                            type: object
-                            properties:
-                              collection: { type: string }
-                              variable: { type: string }
-                          skip: { type: integer }
-                          skipAfter: { type: string }
-                          logdata: { type: string }
+                      type:
+                        type: string
+                      status:
+                        type: string
+                      lastTransitionTime:
+                        type: string
+                        format: date-time
+                      reason:
+                        type: string
+                      message:
+                        type: string
+                    required: [type, status]
+                lastAppliedHash:
+                  type: string
+                synced:
+                  type: boolean
       subresources:
         status: {}

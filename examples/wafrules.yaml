@@ -1,291 +1,204 @@
-# Simple Allow rule
 apiVersion: cdn.ik8s.ir/v1alpha1
 kind: WAFRule
 metadata:
-  name: allow-login
-  namespace: default
+  name: block-north-korea
 spec:
   ruleId: 1001
-  phase: 1
-  action: allow
-  operator: "@contains"
-  match: "login"
-  variables:
-    - type: REQUEST_URI
-  transformations:
-    - lowercase
-  metadata:
-    severity: "INFO"
-    message: "Login request allowed"
-    tags:
-      - auth
-      - allow
-  enabled: true
----
-# Deny Rule with Status Action
-apiVersion: cdn.ik8s.ir/v1alpha1
-kind: WAFRule
-metadata:
-  name: block-sqli
-  namespace: default
-spec:
-  ruleId: 2001
-  phase: 2
-  action: status
-  operator: "@detectSQLi"
-  match: ""
-  variables:
-    - type: ARGS
-  transformations:
-    - urlDecode
-    - lowercase
-  actionConfig:
-    status:
-      code: 403
-  metadata:
-    severity: "CRITICAL"
-    message: "SQL Injection detected"
-    tags:
-      - attack
-      - sqli
-  enabled: true
----
-# Redirect Rule
-apiVersion: cdn.ik8s.ir/v1alpha1
-kind: WAFRule
-metadata:
-  name: redirect-old-path
-  namespace: default
-spec:
-  ruleId: 3001
-  phase: 1
-  action: redirect
-  operator: "@beginsWith"
-  match: "/old-path"
-  variables:
-    - type: REQUEST_URI
-  actionConfig:
-    redirect:
-      url: "/new-path"
-  metadata:
-    message: "Redirect old path to new path"
-  enabled: true
----
-# Chained Rule example
-apiVersion: cdn.ik8s.ir/v1alpha1
-kind: WAFRule
-metadata:
-  name: chain-example
-  namespace: default
-spec:
-  ruleId: 4001
-  phase: 2
-  action: chain
-  operator: "@contains"
-  match: "user="
-  variables:
-    - type: ARGS
-  transformations:
-    - lowercase
-  metadata:
-    message: "Check suspicious user param"
-  enabled: true
-  chainRules:
-    - ruleId: 4002
-      phase: 2
-      action: log
-      operator: "@rx"
-      match: "[0-9]{10}"
-      variables:
-        - type: ARGS
-          selector: "user"
-      transformations:
-        - removeWhitespace
-      metadata:
-        message: "User param looks like a phone number"
----
-# Ban North Korea (Geo-based rule)
-apiVersion: cdn.ik8s.ir/v1alpha1
-kind: WAFRule
-metadata:
-  name: ban-north-korea
-  namespace: default
-spec:
-  ruleId: 5001
-  phase: 1
-  action: deny
-  operator: "@geoLookup"
-  match: "KP"
-  variables:
-    - type: GEO
-  metadata:
-    severity: "CRITICAL"
-    message: "Block requests from North Korea"
-    tags:
-      - geo
-      - block
-  enabled: true
-  actionConfig:
-    status:
-      code: 403
----
-# Deny Example IP
-apiVersion: cdn.ik8s.ir/v1alpha1
-kind: WAFRule
-metadata:
-  name: deny-bad-ip
-  namespace: default
-spec:
-  ruleId: 5002
-  phase: 1
-  action: deny
-  operator: "@ipMatch"
-  match: "192.168.10.100"
-  variables:
-    - type: REMOTE_ADDR
-  metadata:
-    severity: "HIGH"
-    message: "Blocked malicious IP"
-    tags:
-      - ip
-      - block
-  enabled: true
-  actionConfig:
-    status:
-      code: 403
----
-# Deny Keywords in URI (SQLi/XSS style)
-apiVersion: cdn.ik8s.ir/v1alpha1
-kind: WAFRule
-metadata:
-  name: deny-suspicious-uri
-  namespace: default
-spec:
-  ruleId: 5003
   phase: 2
   action: deny
-  operator: "@contains"
-  match: "select"
-  variables:
-    - type: REQUEST_URI
-  transformations:
-    - lowercase
-  metadata:
-    severity: "CRITICAL"
-    message: "SQL keyword detected in URI"
-    tags:
-      - attack
-      - sqli
   enabled: true
-  actionConfig:
-    status:
-      code: 403
+  httpStatus: 403
+  ruleLogic:
+    type: MATCH
+    operator: "@geoLookup"
+    variables:
+      - type: IP
+    match: "KP"
+    metadata:
+      message: "Blocked traffic from North Korea"
+      severity: "CRITICAL"
+      tags: ["geo"]
 ---
-# Deny Multiple Suspicious Keywords (chained rule)
 apiVersion: cdn.ik8s.ir/v1alpha1
 kind: WAFRule
 metadata:
-  name: deny-multi-keyword
-  namespace: default
+  name: block-specific-ip
 spec:
-  ruleId: 5004
-  phase: 2
-  action: chain
-  operator: "@contains"
-  match: "union"
-  variables:
-    - type: REQUEST_URI
-  transformations:
-    - lowercase
-  metadata:
-    severity: "CRITICAL"
-    message: "Potential SQL injection detected"
-    tags:
-      - attack
-      - sqli
+  ruleId: 1002
+  phase: 1
+  action: deny
   enabled: true
-  chainRules:
-    - ruleId: 5005
-      phase: 2
-      action: deny
-      operator: "@contains"
-      match: "select"
-      variables:
-        - type: REQUEST_URI
-      transformations:
-        - lowercase
-      metadata:
-        message: "Secondary check for SQL keyword 'select'"
+  ruleLogic:
+    type: MATCH
+    operator: "@ipMatch"
+    variables:
+      - type: IP
+    match: "192.168.100.1"
+    metadata:
+      message: "Blocked specific IP"
+      severity: "HIGH"
+      tags: ["ip"]
 ---
-# Block XSS in Parameters.
 apiVersion: cdn.ik8s.ir/v1alpha1
 kind: WAFRule
 metadata:
-  name: deny-xss-param
-  namespace: default
+  name: block-admin-uri
 spec:
-  ruleId: 5006
+  ruleId: 1003
   phase: 2
   action: deny
-  operator: "@detectXSS"
-  match: ""
-  variables:
-    - type: ARGS
-  transformations:
-    - urlDecode
-    - lowercase
-  metadata:
-    severity: "CRITICAL"
-    message: "XSS attempt detected in parameters"
-    tags:
-      - attack
-      - xss
   enabled: true
-  actionConfig:
-    status:
-      code: 403
+  ruleLogic:
+    type: MATCH
+    operator: "@contains"
+    variables:
+      - type: REQUEST_URI
+    match: "admin"
+    metadata:
+      message: "Blocked /admin in URI"
+      severity: "MEDIUM"
+      tags: ["uri"]
 ---
-# Block North Korea with specific IP and GET method.
 apiVersion: cdn.ik8s.ir/v1alpha1
 kind: WAFRule
 metadata:
-  name: deny-nk-ip-get
-  namespace: default
+  name: block-get-method
 spec:
-  ruleId: 6001
-  phase: 1
-  action: chain
-  operator: "@geoLookup"
-  match: "KP"
-  variables:
-    - type: GEO
-  metadata:
-    severity: "CRITICAL"
-    message: "Block North Korea with specific IP and GET method"
-    tags:
-      - geo
-      - ip
-      - method
+  ruleId: 1004
+  phase: 2
+  action: deny
   enabled: true
-  actionConfig:
-    status:
-      code: 403
-  chainRules:
-    - ruleId: 6002
-      phase: 1
-      action: chain
-      operator: "@ipMatch"
-      match: "192.168.100.1"
-      variables:
-        - type: REMOTE_ADDR
-      metadata:
-        message: "Specific IP match"
-    - ruleId: 6003
-      phase: 1
-      action: deny
-      operator: "@streq"
-      match: "GET"
-      variables:
-        - type: REQUEST_METHOD
-      metadata:
-        message: "Block GET method"
+  ruleLogic:
+    type: MATCH
+    operator: "@streq"
+    variables:
+      - type: REQUEST_METHOD
+    match: "GET"
+    metadata:
+      message: "Blocked GET method"
+      severity: "LOW"
+      tags: ["method"]
+---
+apiVersion: cdn.ik8s.ir/v1alpha1
+kind: WAFRule
+metadata:
+  name: block-sql-injection
+spec:
+  ruleId: 1005
+  phase: 2
+  action: deny
+  enabled: true
+  ruleLogic:
+    type: MATCH
+    operator: "@rx"
+    variables:
+      - type: REQUEST_BODY
+    match: "(?i)(union select|drop table|insert into)"
+    transformations: ["urlDecode", "lowercase"]
+    metadata:
+      message: "SQL Injection detected"
+      severity: "CRITICAL"
+      tags: ["sqli"]
+---
+apiVersion: cdn.ik8s.ir/v1alpha1
+kind: WAFRule
+metadata:
+  name: block-xss
+spec:
+  ruleId: 1006
+  phase: 2
+  action: deny
+  enabled: true
+  ruleLogic:
+    type: MATCH
+    operator: "@rx"
+    variables:
+      - type: REQUEST_BODY
+    match: "<script.*?>"
+    transformations: ["htmlEntityDecode", "lowercase"]
+    metadata:
+      message: "XSS attack detected"
+      severity: "CRITICAL"
+      tags: ["xss"]
+---
+apiVersion: cdn.ik8s.ir/v1alpha1
+kind: WAFRule
+metadata:
+  name: block-user-agent-bot
+spec:
+  ruleId: 1007
+  phase: 1
+  action: deny
+  enabled: true
+  ruleLogic:
+    type: MATCH
+    operator: "@rx"
+    variables:
+      - type: REQUEST_HEADERS
+        selector: "User-Agent"
+    match: "(curl|wget|nikto)"
+    metadata:
+      message: "Blocked unwanted bots"
+      severity: "HIGH"
+      tags: ["bot"]
+---
+apiVersion: cdn.ik8s.ir/v1alpha1
+kind: WAFRule
+metadata:
+  name: block-sensitive-cookie
+spec:
+  ruleId: 1008
+  phase: 2
+  action: deny
+  enabled: true
+  ruleLogic:
+    type: MATCH
+    operator: "@contains"
+    variables:
+      - type: REQUEST_COOKIES
+        selector: "sessionid"
+    match: "admin"
+    metadata:
+      message: "Blocked session cookie containing admin"
+      severity: "HIGH"
+      tags: ["cookie"]
+---
+apiVersion: cdn.ik8s.ir/v1alpha1
+kind: WAFRule
+metadata:
+  name: complex-and-or
+spec:
+  ruleId: 1009
+  phase: 2
+  action: deny
+  enabled: true
+  httpStatus: 403
+  ruleLogic:
+    type: AND
+    children:
+      - type: MATCH
+        operator: "@geoLookup"
+        variables:
+          - type: IP
+        match: "KP"
+        metadata:
+          message: "From North Korea"
+          severity: "CRITICAL"
+      - type: OR
+        children:
+          - type: MATCH
+            operator: "@ipMatch"
+            variables:
+              - type: IP
+            match: "192.168.100.1"
+            metadata:
+              message: "Bad IP"
+              severity: "HIGH"
+          - type: MATCH
+            operator: "@contains"
+            variables:
+              - type: REQUEST_URI
+            match: "admin"
+            metadata:
+              message: "Admin URI"
+              severity: "HIGH"
