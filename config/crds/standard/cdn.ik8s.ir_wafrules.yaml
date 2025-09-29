@@ -12,6 +12,8 @@ spec:
   scope: Namespaced
   versions:
     - name: v1alpha1
+      served: true
+      storage: true
       schema:
         openAPIV3Schema:
           type: object
@@ -23,15 +25,10 @@ spec:
                 gateway:
                   type: object
                   properties:
-                    name:
-                      type: string
-                ruleId:
-                  type: integer
-                  minimum: 1
-                phase:
-                  type: integer
-                  minimum: 1
-                  maximum: 5
+                    name: { type: string }
+                    namespace: { type: string }
+                ruleId: { type: integer, minimum: 1 }
+                phase: { type: integer, minimum: 1, maximum: 5 }
                 action:
                   type: string
                   enum:
@@ -65,155 +62,108 @@ spec:
                     ]
                 operator:
                   type: string
-                  enum:
-                    [
-                      contains,
-                      beginsWith,
-                      endsWith,
-                      equals,
-                      regex,
-                      geoLookup,
-                      ipMatch,
-                      unconditionalMatch,
-                      within,
-                      detectSQLi,
-                      detectXSS,
-                      pm,
-                      pmFromFile,
-                      rx,
-                      streq,
-                      validateByteRange,
-                      validateUrlEncoding,
-                      validateUtf8Encoding,
-                      verifyCC,
-                      verifyCPF,
-                      verifyCNPJ,
-                      verifySSN,
-                    ]
+                match: { type: string }
                 variables:
                   type: array
                   items:
                     type: object
                     properties:
-                      type:
-                        type: string
-                      selector:
-                        type: string
-                      count:
-                        type: boolean
-                        default: false
-                      exclusion:
-                        type: boolean
-                        default: false
+                      type: { type: string }
+                      selector: { type: string }
+                      count: { type: boolean, default: false }
+                      exclusion: { type: boolean, default: false }
+                      key: { type: string }
                 transformations:
                   type: array
-                  items:
-                    type: string
-                    enum:
-                      [
-                        none,
-                        lowercase,
-                        urlDecode,
-                        htmlEntityDecode,
-                        base64Decode,
-                        removeWhitespace,
-                        removeNulls,
-                        cmdLine,
-                        compressWhitespace,
-                        base64Encode,
-                      ]
-                match:
-                  type: string
+                  items: { type: string }
                 metadata:
                   type: object
                   properties:
-                    severity:
-                      type: string
-                      enum:
-                        [
-                          emergency,
-                          alert,
-                          critical,
-                          error,
-                          warning,
-                          notice,
-                          info,
-                          debug,
-                        ]
-                    message:
-                      type: string
+                    severity: { type: string }
+                    message: { type: string }
                     tags:
                       type: array
-                      items:
-                        type: string
-                enabled:
-                  type: boolean
-                  default: true
-                httpStatus:
-                  type: integer
-                  minimum: 100
-                  maximum: 599
-                # Action-specific fields
-                redirect:
-                  type: string
-                status:
-                  type: integer
-                setvar:
+                      items: { type: string }
+                enabled: { type: boolean, default: true }
+                httpStatus: { type: integer, minimum: 100, maximum: 599 }
+                actionConfig:
                   type: object
                   properties:
-                    variable: string
-                    value: string
-                    scope: string
-                initcol:
-                  type: object
-                  properties:
-                    collection: string
-                    variable: string
-                skip:
-                  type: integer
-                skipAfter:
-                  type: string
-                # Chain rules with proper structure
-                chain:
-                  type: boolean
-                  default: false
+                    redirect:
+                      type: object
+                      properties: { url: { type: string } }
+                    status:
+                      type: object
+                      properties: { code: { type: integer } }
+                    setvar:
+                      type: object
+                      properties:
+                        variable: { type: string }
+                        value: { type: string }
+                        scope: { type: string }
+                    initcol:
+                      type: object
+                      properties:
+                        collection: { type: string }
+                        variable: { type: string }
+                    skip: { type: integer }
+                    skipAfter: { type: string }
+                    logdata: { type: string }
                 chainRules:
                   type: array
                   items:
                     type: object
-                    required: [operator, match]
-                    properties:
-                      operator:
-                        type: string
+                    properties: # inline same as WAFRuleSpec
+                      ruleId: { type: integer, minimum: 1 }
+                      phase: { type: integer, minimum: 1, maximum: 5 }
+                      action: { type: string }
+                      operator: { type: string }
+                      match: { type: string }
                       variables:
                         type: array
                         items:
                           type: object
                           properties:
-                            type: string
-                            selector: string
+                            type: { type: string }
+                            selector: { type: string }
+                            count: { type: boolean, default: false }
+                            exclusion: { type: boolean, default: false }
+                            key: { type: string }
                       transformations:
                         type: array
-                        items:
-                          type: string
-                      match:
-                        type: string
-            status:
-              type: object
-              properties:
-                conditions:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      type: string
-                      status: string
-                      lastTransitionTime: string
-                      reason: string
-                      message: string
-                lastAppliedHash: string
-                synced: boolean
-      served: true
-      storage: true
+                        items: { type: string }
+                      metadata:
+                        type: object
+                        properties:
+                          severity: { type: string }
+                          message: { type: string }
+                          tags:
+                            type: array
+                            items: { type: string }
+                      enabled: { type: boolean, default: true }
+                      httpStatus: { type: integer, minimum: 100, maximum: 599 }
+                      actionConfig:
+                        type: object
+                        properties:
+                          redirect:
+                            type: object
+                            properties: { url: { type: string } }
+                          status:
+                            type: object
+                            properties: { code: { type: integer } }
+                          setvar:
+                            type: object
+                            properties:
+                              variable: { type: string }
+                              value: { type: string }
+                              scope: { type: string }
+                          initcol:
+                            type: object
+                            properties:
+                              collection: { type: string }
+                              variable: { type: string }
+                          skip: { type: integer }
+                          skipAfter: { type: string }
+                          logdata: { type: string }
       subresources:
         status: {}

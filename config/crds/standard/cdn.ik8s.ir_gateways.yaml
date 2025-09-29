@@ -54,6 +54,7 @@ spec:
                 tls:
                   type: string
                   enum: [none, auto, private]
+                  default: "auto"
                 wafEnabled:
                   type: boolean
                   default: false
