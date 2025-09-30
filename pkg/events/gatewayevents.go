@@ -26,7 +26,7 @@ func OnAddGateway(obj interface{}) {
 	}
 
 	redisClient := redis.CreateClient()
-	data := map[string]interface{}{
+	data := map[string]any{
 		"name":        gateway.GetName(),
 		"namespace":   gateway.GetNamespace(),
 		"UID":         gateway.GetUID(),
@@ -112,10 +112,10 @@ func OnUpdateGateway(prev interface{}, obj interface{}) {
 		// 	labels = make(map[string]string)
 		// }
 		uo := &unstructured.Unstructured{
-			Object: map[string]interface{}{
+			Object: map[string]any{
 				"apiVersion": httpRoute.APIVersion,
 				"kind":       httpRoute.Kind,
-				"metadata": map[string]interface{}{
+				"metadata": map[string]any{
 					"name":      httpRoute.Name,
 					"namespace": httpRoute.Namespace,
 				},
@@ -155,7 +155,7 @@ func OnUpdateGateway(prev interface{}, obj interface{}) {
 	}
 }
 
-func convertUnstructToGateway(obj interface{}) (*v1alpha1Types.Gateway, error) {
+func convertUnstructToGateway(obj any) (*v1alpha1Types.Gateway, error) {
 	u := obj.(*unstructured.Unstructured)
 	var gateway v1alpha1Types.Gateway
 	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(u.Object, &gateway); err != nil {
@@ -194,7 +194,7 @@ func findHttpRoutesByGatewayName(name string, namespace string) (*v1alpha1Types.
 	return &httpRouteList, nil
 }
 
-func OnDeleteGateway(obj interface{}) {
+func OnDeleteGateway(obj any) {
 	u := obj.(*unstructured.Unstructured)
 	var gateway v1alpha1Types.Gateway
 	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(u.Object, &gateway); err != nil {
