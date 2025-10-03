@@ -32,7 +32,9 @@ func main() {
 
 	wafRulesInformer := k8s.CreateWafRuleInformer()
 	wafRulesInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc: events.OnAddWafRule,
+		AddFunc:    events.OnAddWafRule,
+		UpdateFunc: events.OnUpdateWafRule,
+		DeleteFunc: events.OnDeleteWafRule,
 	})
 
 	secretInformer := k8s.CreateSecretInformer()

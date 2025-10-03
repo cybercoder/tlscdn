@@ -4,12 +4,6 @@ metadata:
   name: wafrules.cdn.ik8s.ir
 spec:
   group: cdn.ik8s.ir
-  names:
-    kind: WAFRule
-    plural: wafrules
-    singular: wafrule
-    listKind: WAFRuleList
-  scope: Namespaced
   versions:
     - name: v1alpha1
       served: true
@@ -20,113 +14,124 @@ spec:
           properties:
             spec:
               type: object
-              required: [cdnGateway, ruleId, phase, action, ruleLogic]
               properties:
                 cdnGateway:
-                  type: object
-                  properties:
-                    name:
-                      type: string
-                ruleId:
-                  type: integer
-                  minimum: 1
-                phase:
-                  type: integer
-                  minimum: 1
-                  maximum: 5
-                action:
                   type: string
-                  enum:
-                    - allow
-                    - deny
-                    - drop
-                    - pass
-                    - proxy
-                    - redirect
-                    - log
-                    - auditlog
-                    - status
-                    - capture
                 enabled:
                   type: boolean
                   default: true
-                httpStatus:
-                  type: integer
-                  minimum: 100
-                  maximum: 599
-                ruleLogic:
-                  type: object
-                  required: [type]
-                  properties:
-                    type:
-                      type: string
-                      enum: ["AND", "OR", "MATCH"]
-                    operator:
-                      type: string
-                    match:
-                      type: string
-                    variables:
-                      type: array
-                      items:
-                        type: object
-                        properties:
-                          type:
-                            type: string
-                          selector:
-                            type: string
-                          count:
-                            type: boolean
-                            default: false
-                          exclusion:
-                            type: boolean
-                            default: false
-                          key:
-                            type: string
-                    transformations:
-                      type: array
-                      items:
-                        type: string
-                        enum:
-                          [
-                            "none",
-                            "lowercase",
-                            "urlDecode",
-                            "htmlEntityDecode",
-                            "base64Decode",
-                            "removeWhitespace",
-                            "removeNulls",
-                            "cmdLine",
-                            "compressWhitespace",
-                            "base64Encode",
-                          ]
-                    children:
-                      type: array
-                      items:
-                        type: object
-                        properties: {} # inline recursion
-            status:
-              type: object
-              properties:
-                conditions:
+                rules:
                   type: array
                   items:
                     type: object
                     properties:
-                      type:
+                      id:
                         type: string
-                      status:
+                        description: Unique rule identifier
+                      name:
                         type: string
-                      lastTransitionTime:
+                        description: Human-readable rule name
+                      enabled:
+                        type: boolean
+                        default: true
+                      description:
                         type: string
-                        format: date-time
-                      reason:
-                        type: string
-                      message:
-                        type: string
-                    required: [type, status]
-                lastAppliedHash:
-                  type: string
-                synced:
-                  type: boolean
-      subresources:
-        status: {}
+                        description: Rule description
+                      groups:
+                        type: array
+                        description: OR between groups, AND within groups
+                        items:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              param:
+                                type: string
+                                enum:
+                                  - host
+                                  - user_agent
+                                  - referer
+                                  - cookie
+                                  - url
+                                  - path
+                                  - query
+                                  - ip
+                                  - country
+                                  - method
+                                  - body
+                                  - arg
+                                  - header
+                              operator:
+                                type: string
+                                enum:
+                                  - contains
+                                  - equals
+                                  - startswith
+                                  - endswith
+                                  - matches
+                                  - in
+                                  - not_in
+                                  - gt
+                                  - lt
+                                  - exists
+                                  - not_exists
+                              value:
+                                oneOf:
+                                  - type: string
+                                  - type: array
+                                    items:
+                                      type: string
+                              param_name:
+                                type: string
+                                description: Specific parameter name (for arg, header, etc.)
+                      action:
+                        type: object
+                        properties:
+                          type:
+                            type: string
+                            enum:
+                              - deny
+                              - allow
+                              - captcha
+                              - ratelimit
+                              - set_cookie
+                              - log
+                          message:
+                            type: string
+                            description: Message to display when blocking
+                          code:
+                            type: integer
+                            description: HTTP status code for deny actions
+                            default: 403
+                          rate:
+                            type: integer
+                            description: Requests per second for ratelimit
+                          burst:
+                            type: integer
+                            description: Burst capacity for ratelimit
+                          name:
+                            type: string
+                            description: Cookie name for set_cookie action
+                          value:
+                            type: string
+                            description: Cookie value for set_cookie action
+                          expires:
+                            type: integer
+                            description: Cookie expiration in seconds
+      additionalPrinterColumns:
+        - name: Gateway
+          type: string
+          description: CDN agteway.
+          jsonPath: .spec.cdnGateway
+          priority: 0
+        - name: Enabled
+          type: boolean
+          jsonPath: .spec.enabled
+          priority: 0
+  scope: Namespaced
+  names:
+    plural: wafrules
+    singular: wafrule
+    kind: WAFRule
+    shortNames:
+      - wr

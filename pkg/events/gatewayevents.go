@@ -17,7 +17,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-func OnAddGateway(obj interface{}) {
+func OnAddGateway(obj any) {
 	u := obj.(*unstructured.Unstructured)
 	var gateway v1alpha1Types.Gateway
 	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(u.Object, &gateway); err != nil {
@@ -26,6 +26,8 @@ func OnAddGateway(obj interface{}) {
 	}
 
 	redisClient := redis.CreateClient()
+	logger.Debugf("add new gateway triggered. %s/%s", gateway.GetNamespace(), gateway.GetName())
+
 	data := map[string]any{
 		"name":        gateway.GetName(),
 		"namespace":   gateway.GetNamespace(),
@@ -46,6 +48,7 @@ func OnAddGateway(obj interface{}) {
 	if redisKey == "" {
 		redisKey = strings.ReplaceAll(string(gateway.GetUID()), "-", "") + "." + CDN_HOSTNAME
 	}
+	logger.Debugf("redis key: %s", redisKey)
 	err = redisClient.Set(context.Background(), redisKey, jsonData, 0).Err()
 	if err != nil {
 		logger.Errorf("Error on Redis set for gateway %s/%s: %v", gateway.GetNamespace(), gateway.GetName(), err)
@@ -61,7 +64,7 @@ func OnAddGateway(obj interface{}) {
 
 }
 
-func OnUpdateGateway(prev interface{}, obj interface{}) {
+func OnUpdateGateway(prev any, obj any) {
 	gateway, err := convertUnstructToGateway(obj)
 	if err != nil {
 		logger.Errorf("Error converting unstructured to gateway object: %v", err)
@@ -138,7 +141,7 @@ func OnUpdateGateway(prev interface{}, obj interface{}) {
 			// delete certificate for old domain
 			err = k8s.DeleteLetsEncryptWildCardCertificate(gateway.Namespace, gateway.Name)
 			if err != nil {
-				logger.Errorf("failed to delete old certificate for gateway %s/%s : %v", gateway.Name, gateway.Namespace)
+				logger.Errorf("failed to delete old certificate for gateway %s/%s : %v", gateway.Name, gateway.Namespace, err)
 			}
 			// invalidate cert cache for old domain.
 			redisClient := redis.CreateClient()
