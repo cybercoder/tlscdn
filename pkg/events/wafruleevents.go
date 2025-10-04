@@ -15,6 +15,7 @@ import (
 )
 
 func OnAddWafRule(obj any) {
+	logger.Debug("OnAddWafRule")
 	u := obj.(*unstructured.Unstructured)
 	var wafrule v1alpha1Types.WAFRule
 	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(u.Object, &wafrule); err != nil {
@@ -32,13 +33,9 @@ func OnAddWafRule(obj any) {
 	}
 
 	redisClient := redis.CreateClient()
-	redisKey := "waf:" + wafrule.GetNamespace() + ":" + string(gName) + ":rules"
+	redisKey := "waf:" + wafrule.GetNamespace() + ":" + string(gName) + ":rule:" + string(wafrule.GetUID())
 
-	redisRules := map[string]any{
-		"rules": wafrule.Spec.Rules,
-	}
-
-	jsonData, err := json.Marshal(redisRules)
+	jsonData, err := json.Marshal(wafrule.Spec)
 	if err != nil {
 		logger.Errorf("failed to marshal rules: %v", err)
 		return
@@ -52,65 +49,65 @@ func OnAddWafRule(obj any) {
 
 }
 
-func OnUpdateWafRule(_, obj any) {
-	u := obj.(*unstructured.Unstructured)
-	var wafrule v1alpha1Types.WAFRule
-	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(u.Object, &wafrule); err != nil {
-		logger.Errorf("Error converting unstructured to wafrule object: %v", err)
-		return
-	}
+// func OnUpdateWafRule(_, obj any) {
+// 	u := obj.(*unstructured.Unstructured)
+// 	var wafrule v1alpha1Types.WAFRule
+// 	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(u.Object, &wafrule); err != nil {
+// 		logger.Errorf("Error converting unstructured to wafrule object: %v", err)
+// 		return
+// 	}
 
-	redisClient := redis.CreateClient()
-	redisKey := "waf:" + wafrule.GetNamespace() + ":" + string(wafrule.Spec.CdnGateway) + ":rules"
-	luaDictCacheKey := wafrule.GetNamespace() + ":" + wafrule.Spec.CdnGateway
+// 	redisClient := redis.CreateClient()
+// 	redisKey := "waf:" + wafrule.GetNamespace() + ":" + string(wafrule.Spec.CdnGateway) + ":rules"
+// 	luaDictCacheKey := wafrule.GetNamespace() + ":" + wafrule.Spec.CdnGateway
 
-	redisRules := map[string]any{
-		"rules": wafrule.Spec.Rules,
-	}
+// 	redisRules := map[string]any{
+// 		"rules": wafrule.Spec.Rules,
+// 	}
 
-	jsonData, err := json.Marshal(redisRules)
-	if err != nil {
-		logger.Errorf("failed to marshal rules: %v", err)
-		return
-	}
+// 	jsonData, err := json.Marshal(redisRules)
+// 	if err != nil {
+// 		logger.Errorf("failed to marshal rules: %v", err)
+// 		return
+// 	}
 
-	err = redisClient.Publish(context.Background(), "invalidate_waf_cache", luaDictCacheKey).Err()
-	if err != nil {
-		logger.Errorf("Error on invalidating waf cache: %v", err)
-		return
-	}
+// 	err = redisClient.Publish(context.Background(), "invalidate_waf_cache", luaDictCacheKey).Err()
+// 	if err != nil {
+// 		logger.Errorf("Error on invalidating waf cache: %v", err)
+// 		return
+// 	}
 
-	err = redisClient.Set(context.Background(),
-		redisKey, jsonData, 0).Err()
-	if err != nil {
-		logger.Errorf("Error on storing waf rule: %s to redis: %v", redisKey, err)
-		return
-	}
+// 	err = redisClient.Set(context.Background(),
+// 		redisKey, jsonData, 0).Err()
+// 	if err != nil {
+// 		logger.Errorf("Error on storing waf rule: %s to redis: %v", redisKey, err)
+// 		return
+// 	}
 
-}
+// }
 
-func OnDeleteWafRule(obj any) {
-	u := obj.(*unstructured.Unstructured)
-	var wafrule v1alpha1Types.WAFRule
-	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(u.Object, &wafrule); err != nil {
-		logger.Errorf("Error converting unstructured to wafrule object: %v", err)
-		return
-	}
+// func OnDeleteWafRule(obj any) {
+// 	u := obj.(*unstructured.Unstructured)
+// 	var wafrule v1alpha1Types.WAFRule
+// 	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(u.Object, &wafrule); err != nil {
+// 		logger.Errorf("Error converting unstructured to wafrule object: %v", err)
+// 		return
+// 	}
 
-	redisClient := redis.CreateClient()
-	redisKey := "waf:" + wafrule.GetNamespace() + ":" + wafrule.Spec.CdnGateway + ":rules"
-	luaDictCacheKey := wafrule.GetNamespace() + ":" + wafrule.Spec.CdnGateway
+// 	redisClient := redis.CreateClient()
+// 	redisKey := "waf:" + wafrule.GetNamespace() + ":" + wafrule.Spec.CdnGateway + ":rules"
+// 	luaDictCacheKey := wafrule.GetNamespace() + ":" + wafrule.Spec.CdnGateway
 
-	err := redisClient.Publish(context.Background(), "invalidate_waf_cache", luaDictCacheKey).Err()
-	if err != nil {
-		logger.Errorf("Error on invalidating waf cache: %v", err)
-		return
-	}
+// 	err := redisClient.Publish(context.Background(), "invalidate_waf_cache", luaDictCacheKey).Err()
+// 	if err != nil {
+// 		logger.Errorf("Error on invalidating waf cache: %v", err)
+// 		return
+// 	}
 
-	err = redisClient.Del(context.Background(), redisKey).Err()
-	if err != nil {
-		logger.Errorf("Error on deleting waf rule: %s from redis: %v", redisKey, err)
-		return
-	}
+// 	err = redisClient.Del(context.Background(), redisKey).Err()
+// 	if err != nil {
+// 		logger.Errorf("Error on deleting waf rule: %s from redis: %v", redisKey, err)
+// 		return
+// 	}
 
-}
+// }

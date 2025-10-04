@@ -10,18 +10,12 @@ type WAFRule struct {
 }
 
 type WAFRuleSpec struct {
-	CdnGateway string `json:"gateway"`
-	Enabled    bool   `json:"enabled,omitempty"`
-	Rules      []Rule `json:"rules"`
-}
-
-type Rule struct {
-	ID          string        `json:"id"`
-	Name        string        `json:"name"`
+	CdnGateway  string        `json:"cdnGateway"`
 	Enabled     bool          `json:"enabled,omitempty"`
+	Order       int           `json:"id"`
 	Description string        `json:"description,omitempty"`
-	Groups      [][]Condition `json:"groups"`
 	Action      Action        `json:"action"`
+	Conditions  [][]Condition `json:"conditions"`
 }
 
 type Condition struct {
