@@ -1,17 +1,17 @@
 apiVersion: cdn.ik8s.ir/v1alpha1
 kind: WAFRule
 metadata:
-  name: rule1
+  name: shahram-rule1
   namespace: "1731930192436"
 spec:
-  cdnGateway: "gw11"
+  cdnGateway: "shahram"
   enabled: true
   description: "Allow traffic only from Iran, block all other countries"
   conditions:
     - - param: country
-        operator: in
-        value: IR
+        operator: not_in
+        value: IR,GB
   action:
     type: deny
-    message: "Access allowed only from Iran"
+    message: "Access allowed only from Iran or United Kingdom."
     code: 403
