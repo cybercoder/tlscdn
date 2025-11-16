@@ -96,7 +96,7 @@ func OnDeleteWafRule(obj any) {
 	redisKey := "waf:" + wafrule.GetNamespace() + ":" + wafrule.Spec.CdnGateway + ":rule:" + string(wafrule.GetUID())
 	luaDictCacheKey := wafrule.GetNamespace() + ":" + wafrule.Spec.CdnGateway
 
-	err := redisClient.Publish(context.Background(), "invalidate_waf_cache", luaDictCacheKey).Err()
+	err := redisClient.Publish(context.Background(), "invalidate_waf_rules_cache", luaDictCacheKey).Err()
 	if err != nil {
 		logger.Errorf("Error on invalidating waf cache: %v", err)
 		return

@@ -4,9 +4,10 @@ metadata:
   name: shahram-rule1
   namespace: "1731930192436"
 spec:
+  order: 2
   cdnGateway: "shahram"
   enabled: true
-  description: "Allow traffic only from Iran, block all other countries"
+  description: "Allow traffic only from Iran or Greatest Britain, block all other countries"
   conditions:
     - - param: country
         operator: not_in
